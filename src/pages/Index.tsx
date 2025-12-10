@@ -23,6 +23,9 @@ type Message = {
   isOwn: boolean;
   isVoice?: boolean;
   voiceDuration?: string;
+  isFile?: boolean;
+  fileName?: string;
+  fileSize?: string;
 };
 
 const Index = () => {
@@ -31,6 +34,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showFileMenu, setShowFileMenu] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: 'Привет! Как дела?', time: '14:20', isOwn: false },
     { id: 2, text: 'Отлично! Работаю над проектом', time: '14:25', isOwn: true },
@@ -75,6 +79,36 @@ const Index = () => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleFileUpload = (type: 'image' | 'document' | 'video') => {
+    const currentTime = new Date();
+    const timeString = `${currentTime.getHours()}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
+    
+    const fileNames = {
+      image: 'Фото.jpg',
+      document: 'Документ.pdf',
+      video: 'Видео.mp4'
+    };
+    
+    const fileSizes = {
+      image: '2.4 МБ',
+      document: '1.8 МБ',
+      video: '15.3 МБ'
+    };
+    
+    const newMessage: Message = {
+      id: messages.length + 1,
+      text: '',
+      time: timeString,
+      isOwn: true,
+      isFile: true,
+      fileName: fileNames[type],
+      fileSize: fileSizes[type]
+    };
+    
+    setMessages([...messages, newMessage]);
+    setShowFileMenu(false);
   };
 
   const currentChat = chats.find(c => c.id === selectedChat);
@@ -228,7 +262,40 @@ const Index = () => {
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className={`max-w-md ${message.isOwn ? 'order-2' : 'order-1'}`}>
-                    {message.isVoice ? (
+                    {message.isFile ? (
+                      <div
+                        className={`px-4 py-3 rounded-2xl ${
+                          message.isOwn
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted'
+                        } flex items-center space-x-3 min-w-[200px]`}
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          message.isOwn ? 'bg-primary-foreground/20' : 'bg-background'
+                        }`}>
+                          <Icon name="File" size={20} className={message.isOwn ? 'text-primary-foreground' : 'text-foreground'} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${message.isOwn ? 'text-primary-foreground' : 'text-foreground'}`}>
+                            {message.fileName}
+                          </p>
+                          <p className={`text-xs ${message.isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                            {message.fileSize}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`rounded-full h-8 w-8 ${
+                            message.isOwn
+                              ? 'hover:bg-primary-foreground/20 text-primary-foreground'
+                              : 'hover:bg-background'
+                          }`}
+                        >
+                          <Icon name="Download" size={16} />
+                        </Button>
+                      </div>
+                    ) : message.isVoice ? (
                       <div
                         className={`px-4 py-3 rounded-2xl ${
                           message.isOwn
@@ -292,10 +359,43 @@ const Index = () => {
           </ScrollArea>
 
           <div className="border-t border-border p-4 bg-card">
-            <div className="max-w-3xl mx-auto flex items-end space-x-3">
-              <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/10 hover:text-primary">
-                <Icon name="Plus" size={22} />
-              </Button>
+            <div className="max-w-3xl mx-auto flex items-end space-x-3 relative">
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-xl hover:bg-primary/10 hover:text-primary"
+                  onClick={() => setShowFileMenu(!showFileMenu)}
+                >
+                  <Icon name="Plus" size={22} />
+                </Button>
+                
+                {showFileMenu && (
+                  <div className="absolute bottom-full left-0 mb-2 bg-card border border-border rounded-xl shadow-lg p-2 min-w-[180px] animate-fade-in">
+                    <button
+                      onClick={() => handleFileUpload('image')}
+                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <Icon name="Image" size={18} className="text-primary" />
+                      <span className="text-sm">Изображение</span>
+                    </button>
+                    <button
+                      onClick={() => handleFileUpload('document')}
+                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <Icon name="FileText" size={18} className="text-primary" />
+                      <span className="text-sm">Документ</span>
+                    </button>
+                    <button
+                      onClick={() => handleFileUpload('video')}
+                      className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <Icon name="Video" size={18} className="text-primary" />
+                      <span className="text-sm">Видео</span>
+                    </button>
+                  </div>
+                )}
+              </div>
               
               <div className="flex-1 flex items-end space-x-2 bg-muted rounded-2xl px-4 py-2">
                 <Input
