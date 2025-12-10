@@ -11,6 +11,7 @@ import { Stories } from '@/components/Stories';
 import { MessageActions } from '@/components/MessageActions';
 import { EmojiPicker } from '@/components/EmojiPicker';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Contacts } from '@/components/Contacts';
 
 type Chat = {
   id: number;
@@ -262,11 +263,20 @@ const Index = () => {
       </div>
 
       <div className="w-96 border-r border-border bg-card flex flex-col">
-        {showStories && <Stories stories={stories} onStoryClick={() => {}} />}
+        {activeSection === 'chats' && showStories && <Stories stories={stories} onStoryClick={() => {}} />}
         
-        <div className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">Чаты</h1>
+        {activeSection === 'contacts' ? (
+          <Contacts onChatStart={(contactId) => {
+            setSelectedChat(contactId);
+            setActiveSection('chats');
+          }} />
+        ) : (
+          <>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-semibold">
+                  {activeSection === 'chats' ? 'Чаты' : activeSection === 'archive' ? 'Архив' : 'Настройки'}
+                </h1>
             <div className="flex items-center space-x-2">
               <ThemeToggle theme={theme} onToggle={() => setTheme(theme === 'light' ? 'dark' : 'light')} />
               <Button variant="ghost" size="icon" className="rounded-xl">
@@ -326,6 +336,8 @@ const Index = () => {
             ))}
           </div>
         </ScrollArea>
+          </>
+        )}
       </div>
 
       {selectedChat ? (
