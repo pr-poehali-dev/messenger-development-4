@@ -19,12 +19,15 @@ export const apiRequest = async (
     headers['X-User-Id'] = userId;
   }
 
+  console.log('API Request:', { endpoint, userId, hasUserId: !!userId, method: options.method });
+
   const response = await fetch(endpoint, {
     ...options,
     headers,
   });
 
   if (!response.ok) {
+    console.error('API Request failed:', response.status, response.statusText);
     throw new Error(`API request failed: ${response.statusText}`);
   }
 
