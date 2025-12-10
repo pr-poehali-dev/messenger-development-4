@@ -82,6 +82,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
   const [messageSearchQuery, setMessageSearchQuery] = useState('');
   const [showStories, setShowStories] = useState(true);
   const [showFindUsers, setShowFindUsers] = useState(false);
+  const [contactsRefreshTrigger, setContactsRefreshTrigger] = useState(0);
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: 'Привет! Как дела?', time: '14:20', isOwn: false },
     { id: 2, text: 'Отлично! Работаю над проектом', time: '14:25', isOwn: true },
@@ -255,6 +256,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
                 duration: 3000,
               });
               
+              setContactsRefreshTrigger(prev => prev + 1);
               setShowFindUsers(false);
             } catch (err) {
               console.error('Failed to add contact:', err);
@@ -330,6 +332,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
         {activeSection === 'contacts' ? (
           <Contacts 
             userPhone={userPhone}
+            refreshTrigger={contactsRefreshTrigger}
             onChatStart={(contactId) => {
               setSelectedChat(contactId);
               setActiveSection('chats');

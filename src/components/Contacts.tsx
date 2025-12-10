@@ -18,16 +18,17 @@ type Contact = {
 type ContactsProps = {
   onChatStart: (contactId: number) => void;
   userPhone: string;
+  refreshTrigger?: number;
 };
 
-export const Contacts = ({ onChatStart, userPhone }: ContactsProps) => {
+export const Contacts = ({ onChatStart, userPhone, refreshTrigger }: ContactsProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadContacts();
-  }, [userPhone]);
+  }, [userPhone, refreshTrigger]);
 
   const loadContacts = async () => {
     try {
