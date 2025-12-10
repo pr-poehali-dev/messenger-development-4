@@ -80,6 +80,7 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
     } catch (err: any) {
       console.error('Auth error:', err);
       setError(err?.message || 'Ошибка подключения к серверу');
+    } finally {
       setIsLoading(false);
     }
   };
