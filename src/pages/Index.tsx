@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { VideoCall } from '@/components/VideoCall';
 
 type Chat = {
   id: number;
@@ -14,6 +15,8 @@ type Chat = {
   time: string;
   unread: number;
   online: boolean;
+  isGroup?: boolean;
+  membersCount?: number;
 };
 
 type Message = {
@@ -35,6 +38,7 @@ const Index = () => {
   const [messageInput, setMessageInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
+  const [isVideoCall, setIsVideoCall] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: 'Привет! Как дела?', time: '14:20', isOwn: false },
     { id: 2, text: 'Отлично! Работаю над проектом', time: '14:25', isOwn: true },
@@ -46,10 +50,11 @@ const Index = () => {
   const chats: Chat[] = [
     { id: 1, name: 'Анна Смирнова', avatar: '', lastMessage: 'Отлично, встретимся завтра!', time: '14:32', unread: 2, online: true },
     { id: 2, name: 'Дмитрий Петров', avatar: '', lastMessage: 'Голосовое сообщение', time: '13:15', unread: 0, online: false },
-    { id: 3, name: 'Команда проекта', avatar: '', lastMessage: 'Марина: Документы готовы', time: '12:48', unread: 5, online: true },
+    { id: 3, name: 'Команда проекта', avatar: '', lastMessage: 'Марина: Документы готовы', time: '12:48', unread: 5, online: true, isGroup: true, membersCount: 12 },
     { id: 4, name: 'Елена Козлова', avatar: '', lastMessage: 'Спасибо за помощь!', time: '11:20', unread: 0, online: false },
     { id: 5, name: 'Игорь Новиков', avatar: '', lastMessage: 'Созвон в 15:00', time: '10:05', unread: 1, online: true },
-    { id: 6, name: 'Ольга Иванова', avatar: '', lastMessage: 'Посмотри эти файлы', time: 'Вчера', unread: 0, online: false },
+    { id: 6, name: 'Разработка сайта', avatar: '', lastMessage: 'Посмотри эти файлы', time: 'Вчера', unread: 0, online: false, isGroup: true, membersCount: 8 },
+    { id: 7, name: 'Семейный чат', avatar: '', lastMessage: 'Мама: Ужин готов!', time: 'Вчера', unread: 3, online: true, isGroup: true, membersCount: 5 },
   ];
 
   const handleSendMessage = () => {
@@ -125,7 +130,14 @@ const Index = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-background">
+    <>
+      {isVideoCall && currentChat && (
+        <VideoCall 
+          contactName={currentChat.name} 
+          onClose={() => setIsVideoCall(false)} 
+        />
+      )}
+      <div className="flex h-screen bg-background">
       <div className="w-20 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-6 space-y-6">
         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
           <Icon name="MessageCircle" size={24} className="text-primary-foreground" />
@@ -225,17 +237,20 @@ const Index = () => {
               <div className="relative">
                 <Avatar className="w-11 h-11">
                   <AvatarFallback className="bg-primary/20 text-primary font-medium">
-                    {currentChat?.name.split(' ').map(n => n[0]).join('')}
+                    {currentChat?.isGroup ? <Icon name="Users" size={20} /> : currentChat?.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
-                {currentChat?.online && (
+                {!currentChat?.isGroup && currentChat?.online && (
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
                 )}
               </div>
               <div>
                 <h2 className="font-semibold">{currentChat?.name}</h2>
                 <p className="text-sm text-muted-foreground">
-                  {currentChat?.online ? 'В сети' : 'Был(а) недавно'}
+                  {currentChat?.isGroup 
+                    ? `${currentChat.membersCount} участников` 
+                    : currentChat?.online ? 'В сети' : 'Был(а) недавно'
+                  }
                 </p>
               </div>
             </div>
@@ -244,7 +259,12 @@ const Index = () => {
               <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/10 hover:text-primary">
                 <Icon name="Phone" size={20} />
               </Button>
-              <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/10 hover:text-primary">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-xl hover:bg-primary/10 hover:text-primary"
+                onClick={() => setIsVideoCall(true)}
+              >
                 <Icon name="Video" size={20} />
               </Button>
               <Button variant="ghost" size="icon" className="rounded-xl">
@@ -258,7 +278,7 @@ const Index = () => {
               {messages.map((message, index) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                  className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'} animate-fade-in group`}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className={`max-w-md ${message.isOwn ? 'order-2' : 'order-1'}`}>
