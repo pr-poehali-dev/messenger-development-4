@@ -157,8 +157,15 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
 
   const handleSendMessage = async () => {
     console.log('handleSendMessage START', { messageInput, trimmed: messageInput.trim(), userId });
+    
     if (!messageInput.trim()) {
       console.log('Message input is empty, returning');
+      toast({
+        title: "Ошибка",
+        description: "Введите текст сообщения",
+        variant: "destructive",
+        duration: 2000,
+      });
       return;
     }
     if (!userId) {
@@ -905,12 +912,17 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
                 className="rounded-xl h-10 w-10" 
                 size="icon"
                 type="button"
-                onMouseDown={() => console.log('Mouse down on send button')}
-                onTouchStart={() => console.log('Touch start on send button')}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   console.log('Send button clicked!', { selectedChat, newChatContact, messageInput });
+                  
+                  toast({
+                    title: "Кнопка нажата!",
+                    description: `Текст: "${messageInput}"`,
+                    duration: 3000,
+                  });
+                  
                   handleSendMessage();
                 }}
               >
