@@ -127,17 +127,23 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
       return;
     }
     
+    const chatName = newChatContact ? newChatContact.name : (currentChat?.name || '');
+    
     const newMessage: Message = {
       id: messages.length + 1,
       text: messageInput,
       time: timeString,
       isOwn: true,
-      replyTo: replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.isOwn ? 'Вы' : currentChat?.name || '' } : undefined,
+      replyTo: replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.isOwn ? 'Вы' : chatName } : undefined,
     };
     
     setMessages([...messages, newMessage]);
     setMessageInput('');
     setReplyingTo(null);
+    
+    if (newChatContact) {
+      setNewChatContact(null);
+    }
     
     setIsTyping(true);
     setTimeout(() => {
@@ -670,7 +676,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
                 <div className="flex items-center space-x-2">
                   <Icon name="Reply" size={16} className="text-primary" />
                   <div>
-                    <div className="text-xs font-medium">{replyingTo.isOwn ? 'Вы' : currentChat?.name}</div>
+                    <div className="text-xs font-medium">{replyingTo.isOwn ? 'Вы' : (newChatContact ? newChatContact.name : currentChat?.name)}</div>
                     <div className="text-xs text-muted-foreground truncate max-w-xs">{replyingTo.text}</div>
                   </div>
                 </div>
