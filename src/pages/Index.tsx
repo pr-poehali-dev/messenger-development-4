@@ -14,6 +14,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Contacts } from '@/components/Contacts';
 import { Settings } from '@/components/Settings';
 import { UpdateNotification } from '@/components/UpdateNotification';
+import { FindUsers } from '@/components/FindUsers';
 
 type Chat = {
   id: number;
@@ -76,6 +77,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [messageSearchQuery, setMessageSearchQuery] = useState('');
   const [showStories, setShowStories] = useState(true);
+  const [showFindUsers, setShowFindUsers] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: 'Привет! Как дела?', time: '14:20', isOwn: false },
     { id: 2, text: 'Отлично! Работаю над проектом', time: '14:25', isOwn: true },
@@ -230,6 +232,15 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
   return (
     <>
       <UpdateNotification />
+      {showFindUsers && (
+        <FindUsers 
+          onAddContact={(userId) => {
+            console.log('Added user:', userId);
+            setShowFindUsers(false);
+          }}
+          onClose={() => setShowFindUsers(false)}
+        />
+      )}
       {isVideoCall && currentChat && (
         <VideoCall 
           contactName={currentChat.name} 
@@ -307,8 +318,13 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
                 </h1>
             <div className="flex items-center space-x-2">
               <ThemeToggle theme={theme} onToggle={() => setTheme(theme === 'light' ? 'dark' : 'light')} />
-              <Button variant="ghost" size="icon" className="rounded-xl">
-                <Icon name="Plus" size={20} />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-xl"
+                onClick={() => setShowFindUsers(true)}
+              >
+                <Icon name="UserPlus" size={20} />
               </Button>
             </div>
           </div>
