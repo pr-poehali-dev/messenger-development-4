@@ -13,13 +13,19 @@ export const QRScanner = ({ onScan, onClose }: QRScannerProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedData, setScannedData] = useState<string>('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(5);
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     startScanner();
+    startTimeout();
     return () => {
       stopScanner();
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
     };
   }, []);
 
@@ -41,7 +47,23 @@ export const QRScanner = ({ onScan, onClose }: QRScannerProps) => {
     oscillator.stop(audioContext.currentTime + 0.3);
   };
 
+  const startTimeout = () => {
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          onClose();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const handleScanSuccess = (data: string) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+    
     playSuccessSound();
     setScannedData(data);
     setShowSuccess(true);
@@ -176,6 +198,12 @@ export const QRScanner = ({ onScan, onClose }: QRScannerProps) => {
 
       <div className="bg-background/95 backdrop-blur border-t border-border p-6">
         <div className="max-w-md mx-auto text-center space-y-4">
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <Icon name="Clock" size={16} className="text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Закроется через {timeLeft} сек
+            </p>
+          </div>
           <p className="text-sm text-muted-foreground">
             Наведите камеру на QR-код друга для добавления в контакты
           </p>
