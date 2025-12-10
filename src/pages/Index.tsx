@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Icon from '@/components/ui/icon';
 import { API_ENDPOINTS, apiRequest } from '@/config/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -106,13 +106,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
     { id: 4, userId: 4, userName: 'Елена', avatar: '', hasViewed: true },
   ];
 
-  useEffect(() => {
-    if (selectedChat || newChatContact) {
-      loadMessages();
-    }
-  }, [selectedChat, newChatContact]);
-
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     if (!selectedChat && !newChatContact) return;
     
     setIsLoadingMessages(true);
@@ -161,7 +155,13 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
     } finally {
       setIsLoadingMessages(false);
     }
-  };
+  }, [selectedChat, newChatContact, currentChatId, userId]);
+
+  useEffect(() => {
+    if (selectedChat || newChatContact) {
+      loadMessages();
+    }
+  }, [selectedChat, newChatContact, loadMessages]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
@@ -190,13 +190,16 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
     }
     
     const chatName = newChatContact ? newChatContact.name : (currentChat?.name || '');
+    const tempId = Date.now();
+    const messageText = messageInput;
+    const currentReplyTo = replyingTo;
     
     const optimisticMessage: Message = {
-      id: Date.now(),
-      text: messageInput,
+      id: tempId,
+      text: messageText,
       time: timeString,
       isOwn: true,
-      replyTo: replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.isOwn ? 'Вы' : chatName } : undefined,
+      replyTo: currentReplyTo ? { id: currentReplyTo.id, text: currentReplyTo.text, sender: currentReplyTo.isOwn ? 'Вы' : chatName } : undefined,
     };
     
     setMessages([...messages, optimisticMessage]);
@@ -204,7 +207,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
     setReplyingTo(null);
     
     try {
-      const body: any = { text: messageInput };
+      const body: any = { text: messageText };
       
       if (currentChatId) {
         body.chatId = currentChatId;
@@ -214,8 +217,8 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
         body.contactId = selectedChat;
       }
       
-      if (replyingTo) {
-        body.replyToId = replyingTo.id;
+      if (currentReplyTo) {
+        body.replyToId = currentReplyTo.id;
       }
       
       const response = await apiRequest(API_ENDPOINTS.messages, {
@@ -231,9 +234,16 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
         setNewChatContact(null);
       }
       
-      loadMessages();
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.id === tempId 
+            ? { ...msg, id: response.id }
+            : msg
+        )
+      );
     } catch (err) {
       console.error('Failed to send message:', err);
+      setMessages(prevMessages => prevMessages.filter(msg => msg.id !== tempId));
     }
   };
 
