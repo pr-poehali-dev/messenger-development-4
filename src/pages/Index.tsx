@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { API_ENDPOINTS, apiRequest } from '@/config/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -84,14 +84,10 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
   const [showStories, setShowStories] = useState(true);
   const [showFindUsers, setShowFindUsers] = useState(false);
   const [contactsRefreshTrigger, setContactsRefreshTrigger] = useState(0);
-  const [newChatContact, setNewChatContact] = useState<{ name: string; phone: string } | null>(null);
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: 'Привет! Как дела?', time: '14:20', isOwn: false },
-    { id: 2, text: 'Отлично! Работаю над проектом', time: '14:25', isOwn: true },
-    { id: 3, text: '', time: '14:28', isOwn: false, isVoice: true, voiceDuration: '0:45' },
-    { id: 4, text: 'Звучит здорово! Может созвонимся завтра?', time: '14:30', isOwn: true },
-    { id: 5, text: 'Отлично, встретимся завтра!', time: '14:32', isOwn: false },
-  ]);
+  const [newChatContact, setNewChatContact] = useState<{ name: string; phone: string; contactId?: number } | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentChatId, setCurrentChatId] = useState<number | null>(null);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
   const chats: Chat[] = [
     { id: 1, name: 'Анна Смирнова', avatar: '', lastMessage: 'Отлично, встретимся завтра!', time: '14:32', unread: 2, online: true },
@@ -110,39 +106,134 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
     { id: 4, userId: 4, userName: 'Елена', avatar: '', hasViewed: true },
   ];
 
-  const handleSendMessage = () => {
+  useEffect(() => {
+    if (selectedChat || newChatContact) {
+      loadMessages();
+    }
+  }, [selectedChat, newChatContact]);
+
+  const loadMessages = async () => {
+    if (!selectedChat && !newChatContact) return;
+    
+    setIsLoadingMessages(true);
+    try {
+      let url = API_ENDPOINTS.messages;
+      
+      if (currentChatId) {
+        url += `?chatId=${currentChatId}`;
+      } else if (newChatContact?.contactId) {
+        url += `?contactId=${newChatContact.contactId}`;
+      } else if (selectedChat) {
+        url += `?contactId=${selectedChat}`;
+      }
+      
+      const response = await apiRequest(url, { method: 'GET' }, userId);
+      
+      if (response.chatId) {
+        setCurrentChatId(response.chatId);
+      }
+      
+      const loadedMessages: Message[] = (response.messages || []).map((msg: any) => {
+        const msgTime = new Date(msg.createdAt);
+        const timeString = `${msgTime.getHours()}:${msgTime.getMinutes().toString().padStart(2, '0')}`;
+        
+        return {
+          id: msg.id,
+          text: msg.text || '',
+          time: timeString,
+          isOwn: msg.isOwn,
+          isVoice: msg.isVoice,
+          voiceDuration: msg.voiceDuration,
+          isFile: msg.isFile,
+          fileName: msg.fileName,
+          fileSize: msg.fileSize,
+          isEdited: msg.isEdited,
+          isForwarded: msg.isForwarded,
+          forwardedFrom: msg.forwardedFrom,
+          replyTo: msg.replyToId ? { id: msg.replyToId, text: '', sender: '' } : undefined,
+        };
+      });
+      
+      setMessages(loadedMessages);
+    } catch (err) {
+      console.error('Failed to load messages:', err);
+      setMessages([]);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
     
     const currentTime = new Date();
     const timeString = `${currentTime.getHours()}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
     
     if (editingMessage) {
-      setMessages(messages.map(msg => 
-        msg.id === editingMessage.id 
-          ? { ...msg, text: messageInput, isEdited: true }
-          : msg
-      ));
-      setEditingMessage(null);
-      setMessageInput('');
+      try {
+        await apiRequest(API_ENDPOINTS.messages, {
+          method: 'PUT',
+          body: JSON.stringify({ messageId: editingMessage.id, text: messageInput })
+        }, userId);
+        
+        setMessages(messages.map(msg => 
+          msg.id === editingMessage.id 
+            ? { ...msg, text: messageInput, isEdited: true }
+            : msg
+        ));
+        setEditingMessage(null);
+        setMessageInput('');
+      } catch (err) {
+        console.error('Failed to edit message:', err);
+      }
       return;
     }
     
     const chatName = newChatContact ? newChatContact.name : (currentChat?.name || '');
     
-    const newMessage: Message = {
-      id: messages.length + 1,
+    const optimisticMessage: Message = {
+      id: Date.now(),
       text: messageInput,
       time: timeString,
       isOwn: true,
       replyTo: replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.isOwn ? 'Вы' : chatName } : undefined,
     };
     
-    setMessages([...messages, newMessage]);
+    setMessages([...messages, optimisticMessage]);
     setMessageInput('');
     setReplyingTo(null);
     
-    if (newChatContact) {
-      setNewChatContact(null);
+    try {
+      const body: any = { text: messageInput };
+      
+      if (currentChatId) {
+        body.chatId = currentChatId;
+      } else if (newChatContact?.contactId) {
+        body.contactId = newChatContact.contactId;
+      } else if (selectedChat) {
+        body.contactId = selectedChat;
+      }
+      
+      if (replyingTo) {
+        body.replyToId = replyingTo.id;
+      }
+      
+      const response = await apiRequest(API_ENDPOINTS.messages, {
+        method: 'POST',
+        body: JSON.stringify(body)
+      }, userId);
+      
+      if (response.chatId && !currentChatId) {
+        setCurrentChatId(response.chatId);
+      }
+      
+      if (newChatContact) {
+        setNewChatContact(null);
+      }
+      
+      loadMessages();
+    } catch (err) {
+      console.error('Failed to send message:', err);
     }
   };
 
@@ -168,9 +259,17 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
     setShowEmojiPicker(null);
   };
 
-  const handleDeleteMessage = (messageId: number) => {
-    setMessages(messages.filter(msg => msg.id !== messageId));
-    setSelectedMessage(null);
+  const handleDeleteMessage = async (messageId: number) => {
+    try {
+      await apiRequest(`${API_ENDPOINTS.messages}?messageId=${messageId}`, {
+        method: 'DELETE'
+      }, userId);
+      
+      setMessages(messages.filter(msg => msg.id !== messageId));
+      setSelectedMessage(null);
+    } catch (err) {
+      console.error('Failed to delete message:', err);
+    }
   };
 
   const handleForwardMessage = (messageId: number) => {
@@ -339,11 +438,14 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
             refreshTrigger={contactsRefreshTrigger}
             onChatStart={(contactId) => {
               setSelectedChat(contactId);
+              setCurrentChatId(null);
+              setNewChatContact(null);
               setActiveSection('chats');
             }}
-            onNewChat={(name, phone) => {
-              setNewChatContact({ name, phone });
+            onNewChat={(name, phone, contactId) => {
+              setNewChatContact({ name, phone, contactId });
               setSelectedChat(null);
+              setCurrentChatId(null);
               setActiveSection('chats');
             }}
           />
@@ -502,7 +604,11 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
               </div>
             )}
             <div className="space-y-4 max-w-3xl mx-auto">
-              {!newChatContact && messages.map((message, index) => (
+              {isLoadingMessages ? (
+                <div className="flex items-center justify-center py-12">
+                  <Icon name="Loader2" size={32} className="animate-spin text-muted-foreground" />
+                </div>
+              ) : !newChatContact && messages.map((message, index) => (
                 <div
                   key={message.id}
                   className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'} animate-fade-in group`}

@@ -18,7 +18,7 @@ type Contact = {
 
 type ContactsProps = {
   onChatStart: (contactId: number) => void;
-  onNewChat?: (name: string, phone: string) => void;
+  onNewChat?: (name: string, phone: string, contactId: number) => void;
   userPhone: string;
   userId: string;
   refreshTrigger?: number;
@@ -267,10 +267,10 @@ const ContactItem = ({ contact, onChatStart }: { contact: Contact; onChatStart: 
   );
 };
 
-const PhoneContactItem = ({ contact, onNewChat }: { contact: Contact; onNewChat?: (name: string, phone: string) => void }) => {
+const PhoneContactItem = ({ contact, onNewChat }: { contact: Contact; onNewChat?: (name: string, phone: string, contactId: number) => void }) => {
   const handleMessage = () => {
     if (onNewChat) {
-      onNewChat(contact.name, contact.phone);
+      onNewChat(contact.name, contact.phone, contact.id);
     }
   };
 
