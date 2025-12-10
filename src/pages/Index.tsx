@@ -50,7 +50,11 @@ type Story = {
   hasViewed: boolean;
 };
 
-const Index = () => {
+type IndexProps = {
+  userName?: string;
+};
+
+const Index = ({ userName = 'Вы' }: IndexProps) => {
   const [activeSection, setActiveSection] = useState<'chats' | 'contacts' | 'archive' | 'profile' | 'settings'>('chats');
   const [selectedChat, setSelectedChat] = useState<number | null>(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -257,7 +261,9 @@ const Index = () => {
 
         <button className="w-12 h-12 rounded-full overflow-hidden border-2 border-sidebar-border hover:border-primary transition-colors">
           <Avatar>
-            <AvatarFallback className="bg-primary text-primary-foreground">ВЫ</AvatarFallback>
+            <AvatarFallback className="bg-primary text-primary-foreground">
+              {userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
         </button>
       </div>
