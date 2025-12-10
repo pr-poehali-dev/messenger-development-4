@@ -424,7 +424,9 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
         />
       )}
       <div className="flex h-screen bg-background">
-      <div className="w-20 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-6 space-y-6">
+      <div className={`w-20 bg-sidebar border-r border-sidebar-border flex-col items-center py-6 space-y-6 ${
+        (selectedChat || newChatContact) ? 'hidden md:flex' : 'flex'
+      }`}>
         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
           <Icon name="MessageCircle" size={24} className="text-primary-foreground" />
         </div>
@@ -463,7 +465,9 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
         </button>
       </div>
 
-      <div className="w-96 border-r border-border bg-card flex flex-col">
+      <div className={`w-full md:w-96 border-r border-border bg-card flex-col ${
+        (selectedChat || newChatContact) ? 'hidden md:flex' : 'flex'
+      }`}>
         {activeSection === 'chats' && showStories && stories.length > 0 && <Stories stories={stories} onStoryClick={() => {}} />}
         
         {activeSection === 'contacts' ? (
@@ -592,6 +596,17 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
         <div className="flex-1 flex flex-col">
           <div className="h-20 border-b border-border px-6 flex items-center justify-between bg-card">
             <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden rounded-xl"
+                onClick={() => {
+                  setSelectedChat(null);
+                  setNewChatContact(null);
+                }}
+              >
+                <Icon name="ArrowLeft" size={24} />
+              </Button>
               <div className="relative">
                 <Avatar className="w-11 h-11">
                   <AvatarFallback className="bg-primary/20 text-primary font-medium">
