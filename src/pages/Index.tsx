@@ -328,10 +328,13 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
         {activeSection === 'chats' && showStories && <Stories stories={stories} onStoryClick={() => {}} />}
         
         {activeSection === 'contacts' ? (
-          <Contacts onChatStart={(contactId) => {
-            setSelectedChat(contactId);
-            setActiveSection('chats');
-          }} />
+          <Contacts 
+            userPhone={userPhone}
+            onChatStart={(contactId) => {
+              setSelectedChat(contactId);
+              setActiveSection('chats');
+            }} 
+          />
         ) : activeSection === 'settings' ? (
           <Settings 
             userName={userName} 

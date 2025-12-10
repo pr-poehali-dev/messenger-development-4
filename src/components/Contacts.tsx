@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
+import { API_ENDPOINTS, apiRequest } from '@/config/api';
 
 type Contact = {
   id: number;
@@ -16,21 +17,42 @@ type Contact = {
 
 type ContactsProps = {
   onChatStart: (contactId: number) => void;
+  userPhone: string;
 };
 
-export const Contacts = ({ onChatStart }: ContactsProps) => {
+export const Contacts = ({ onChatStart, userPhone }: ContactsProps) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const contacts: Contact[] = [
-    { id: 1, name: 'Анна Смирнова', phone: '+7 (999) 123-45-67', avatar: '', online: true },
-    { id: 2, name: 'Дмитрий Петров', phone: '+7 (999) 234-56-78', avatar: '', online: false, lastSeen: '2 часа назад' },
-    { id: 3, name: 'Елена Козлова', phone: '+7 (999) 345-67-89', avatar: '', online: false, lastSeen: 'вчера' },
-    { id: 4, name: 'Игорь Новиков', phone: '+7 (999) 456-78-90', avatar: '', online: true },
-    { id: 5, name: 'Мария Волкова', phone: '+7 (999) 567-89-01', avatar: '', online: true },
-    { id: 6, name: 'Сергей Морозов', phone: '+7 (999) 678-90-12', avatar: '', online: false, lastSeen: '5 минут назад' },
-    { id: 7, name: 'Ольга Лебедева', phone: '+7 (999) 789-01-23', avatar: '', online: false, lastSeen: '1 час назад' },
-    { id: 8, name: 'Александр Кузнецов', phone: '+7 (999) 890-12-34', avatar: '', online: true },
-  ];
+  useEffect(() => {
+    loadContacts();
+  }, [userPhone]);
+
+  const loadContacts = async () => {
+    try {
+      setIsLoading(true);
+      const data = await apiRequest(API_ENDPOINTS.contacts, {
+        method: 'GET'
+      }, userPhone);
+      
+      const formattedContacts: Contact[] = (data.contacts || []).map((contact: any) => ({
+        id: contact.id,
+        name: contact.name || contact.phone,
+        phone: contact.phone,
+        avatar: contact.avatar || '',
+        online: contact.online || false,
+        lastSeen: contact.last_seen
+      }));
+      
+      setContacts(formattedContacts);
+    } catch (err) {
+      console.error('Failed to load contacts:', err);
+      setContacts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,33 +90,51 @@ export const Contacts = ({ onChatStart }: ContactsProps) => {
 
       <ScrollArea className="flex-1">
         <div className="px-3">
-          {onlineContacts.length > 0 && (
-            <>
-              <div className="px-3 py-2 text-xs font-medium text-muted-foreground">
-                ОНЛАЙН ({onlineContacts.length})
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Icon name="Loader2" size={32} className="animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredContacts.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                <Icon name="Users" size={32} className="text-muted-foreground" />
               </div>
-              {onlineContacts.map(contact => (
-                <ContactItem
-                  key={contact.id}
-                  contact={contact}
-                  onChatStart={onChatStart}
-                />
-              ))}
-            </>
-          )}
+              <p className="text-muted-foreground">Контактов пока нет</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Добавьте друзей через поиск или QR-код
+              </p>
+            </div>
+          ) : (
+            <>
+              {onlineContacts.length > 0 && (
+                <>
+                  <div className="px-3 py-2 text-xs font-medium text-muted-foreground">
+                    ОНЛАЙН ({onlineContacts.length})
+                  </div>
+                  {onlineContacts.map(contact => (
+                    <ContactItem
+                      key={contact.id}
+                      contact={contact}
+                      onChatStart={onChatStart}
+                    />
+                  ))}
+                </>
+              )}
 
-          {offlineContacts.length > 0 && (
-            <>
-              <div className="px-3 py-2 text-xs font-medium text-muted-foreground mt-4">
-                ВСЕ КОНТАКТЫ ({offlineContacts.length})
-              </div>
-              {offlineContacts.map(contact => (
-                <ContactItem
-                  key={contact.id}
-                  contact={contact}
-                  onChatStart={onChatStart}
-                />
-              ))}
+              {offlineContacts.length > 0 && (
+                <>
+                  <div className="px-3 py-2 text-xs font-medium text-muted-foreground mt-4">
+                    ВСЕ КОНТАКТЫ ({offlineContacts.length})
+                  </div>
+                  {offlineContacts.map(contact => (
+                    <ContactItem
+                      key={contact.id}
+                      contact={contact}
+                      onChatStart={onChatStart}
+                    />
+                  ))}
+                </>
+              )}
             </>
           )}
         </div>
