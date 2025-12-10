@@ -313,8 +313,10 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
+    console.log('Key pressed:', e.key);
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      console.log('Enter pressed, calling handleSendMessage');
       handleSendMessage();
     }
   };
@@ -901,9 +903,14 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
               
               <Button 
                 className="rounded-xl h-10 w-10" 
-                size="icon" 
-                onClick={() => {
-                  console.log('Send button clicked!');
+                size="icon"
+                type="button"
+                onMouseDown={() => console.log('Mouse down on send button')}
+                onTouchStart={() => console.log('Touch start on send button')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Send button clicked!', { selectedChat, newChatContact, messageInput });
                   handleSendMessage();
                 }}
               >
