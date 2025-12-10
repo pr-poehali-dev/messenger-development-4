@@ -30,6 +30,7 @@ const Index = () => {
   const [selectedChat, setSelectedChat] = useState<number | null>(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: 'Привет! Как дела?', time: '14:20', isOwn: false },
     { id: 2, text: 'Отлично! Работаю над проектом', time: '14:25', isOwn: true },
@@ -62,6 +63,11 @@ const Index = () => {
     
     setMessages([...messages, newMessage]);
     setMessageInput('');
+    
+    setIsTyping(true);
+    setTimeout(() => {
+      setIsTyping(false);
+    }, 3000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -267,6 +273,21 @@ const Index = () => {
                   </div>
                 </div>
               ))}
+              
+              {isTyping && (
+                <div className="flex justify-start animate-fade-in">
+                  <div className="max-w-md">
+                    <div className="px-4 py-3 rounded-2xl bg-muted flex items-center space-x-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 text-left">Печатает...</p>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
 
