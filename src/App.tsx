@@ -72,7 +72,7 @@ const App = () => {
     
     const accountIndex = accounts.findIndex((acc: any) => acc.phone === userPhone);
     if (accountIndex !== -1) {
-      accounts[accountIndex] = { phone: userPhone, name, avatar };
+      accounts[accountIndex] = { phone: userPhone, name, avatar, userId: accounts[accountIndex].userId };
       localStorage.setItem('whatsok_accounts', JSON.stringify(accounts));
     }
     
