@@ -156,7 +156,11 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
   }, [selectedChat, newChatContact, loadMessages]);
 
   const handleSendMessage = async () => {
-    if (!messageInput.trim()) return;
+    console.log('handleSendMessage START', { messageInput, trimmed: messageInput.trim(), userId });
+    if (!messageInput.trim()) {
+      console.log('Message input is empty, returning');
+      return;
+    }
     if (!userId) {
       console.warn('Cannot send message: userId is empty');
       toast({
@@ -895,7 +899,14 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
                 <Icon name="Mic" size={22} />
               </Button>
               
-              <Button className="rounded-xl h-10 w-10" size="icon" onClick={handleSendMessage}>
+              <Button 
+                className="rounded-xl h-10 w-10" 
+                size="icon" 
+                onClick={() => {
+                  console.log('Send button clicked!');
+                  handleSendMessage();
+                }}
+              >
                 <Icon name="Send" size={18} />
               </Button>
             </div>
