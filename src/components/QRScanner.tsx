@@ -12,6 +12,7 @@ export const QRScanner = ({ onScan, onClose }: QRScannerProps) => {
   const [hasCamera, setHasCamera] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [scannedData, setScannedData] = useState<string>('');
+  const [showSuccess, setShowSuccess] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
 
@@ -22,16 +23,45 @@ export const QRScanner = ({ onScan, onClose }: QRScannerProps) => {
     };
   }, []);
 
+  const playSuccessSound = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.3);
+  };
+
+  const handleScanSuccess = (data: string) => {
+    playSuccessSound();
+    setScannedData(data);
+    setShowSuccess(true);
+    
+    if (qrScannerRef.current) {
+      qrScannerRef.current.stop();
+    }
+    
+    setTimeout(() => {
+      onScan(data);
+    }, 800);
+  };
+
   const startScanner = async () => {
     if (!videoRef.current) return;
 
     try {
       const qrScanner = new QrScanner(
         videoRef.current,
-        (result) => {
-          setScannedData(result.data);
-          onScan(result.data);
-        },
+        (result) => handleScanSuccess(result.data),
         {
           preferredCamera: 'environment',
           highlightScanRegion: true,
@@ -98,17 +128,31 @@ export const QRScanner = ({ onScan, onClose }: QRScannerProps) => {
             
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative w-64 h-64">
-                <div className="absolute inset-0 border-2 border-primary rounded-3xl" />
+                <div className={`absolute inset-0 border-2 rounded-3xl transition-colors duration-300 ${
+                  showSuccess ? 'border-green-500' : 'border-primary'
+                }`} />
                 
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-2xl" />
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-2xl" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-2xl" />
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-2xl" />
+                <div className={`absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 rounded-tl-2xl transition-colors duration-300 ${
+                  showSuccess ? 'border-green-500' : 'border-primary'
+                }`} />
+                <div className={`absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 rounded-tr-2xl transition-colors duration-300 ${
+                  showSuccess ? 'border-green-500' : 'border-primary'
+                }`} />
+                <div className={`absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 rounded-bl-2xl transition-colors duration-300 ${
+                  showSuccess ? 'border-green-500' : 'border-primary'
+                }`} />
+                <div className={`absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 rounded-br-2xl transition-colors duration-300 ${
+                  showSuccess ? 'border-green-500' : 'border-primary'
+                }`} />
                 
                 <div className="absolute inset-0 flex items-center justify-center">
-                  {isScanning && (
+                  {showSuccess ? (
+                    <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center animate-bounce">
+                      <Icon name="Check" size={40} className="text-white" />
+                    </div>
+                  ) : isScanning ? (
                     <div className="w-full h-1 bg-primary/50 animate-scan" />
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
