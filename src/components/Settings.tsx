@@ -242,6 +242,15 @@ export const Settings = ({ userName, userPhone, userAvatar, onUpdateProfile, onL
               <span className="font-medium">Web</span>
             </div>
           </div>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => window.location.reload()}
+          >
+            <Icon name="RefreshCw" size={18} />
+            Проверить обновления
+          </Button>
         </div>
 
         <Button

@@ -13,6 +13,7 @@ import { EmojiPicker } from '@/components/EmojiPicker';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Contacts } from '@/components/Contacts';
 import { Settings } from '@/components/Settings';
+import { UpdateNotification } from '@/components/UpdateNotification';
 
 type Chat = {
   id: number;
@@ -228,6 +229,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
 
   return (
     <>
+      <UpdateNotification />
       {isVideoCall && currentChat && (
         <VideoCall 
           contactName={currentChat.name} 
