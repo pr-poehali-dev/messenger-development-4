@@ -28,6 +28,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         body_data = json.loads(event.get('body', '{}'))
         phone = body_data.get('phone', '').strip()
         name = body_data.get('name', '').strip()
+        ip_address = body_data.get('ipAddress', '').strip()
         
         if not phone or not name:
             return {
@@ -36,6 +37,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'body': json.dumps({'error': 'Phone and name are required'}),
                 'isBase64Encoded': False
             }
+        
+        if not ip_address:
+            request_context = event.get('requestContext', {})
+            identity = request_context.get('identity', {})
+            ip_address = identity.get('sourceIp', 'unknown')
         
         conn = psycopg2.connect(os.environ['DATABASE_URL'])
         cur = conn.cursor()
@@ -49,14 +55,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if user:
             user_id, db_phone, db_name, avatar, bio, is_online = user
             cur.execute(
-                "UPDATE users SET name = %s, is_online = true, last_seen = CURRENT_TIMESTAMP WHERE id = %s",
-                (name, user_id)
+                "UPDATE users SET name = %s, is_online = true, last_seen = CURRENT_TIMESTAMP, ip_address = %s WHERE id = %s",
+                (name, ip_address, user_id)
             )
             conn.commit()
         else:
             cur.execute(
-                "INSERT INTO users (phone, name, is_online) VALUES (%s, %s, true) RETURNING id, phone, name, avatar, bio, is_online",
-                (phone, name)
+                "INSERT INTO users (phone, name, is_online, ip_address) VALUES (%s, %s, true, %s) RETURNING id, phone, name, avatar, bio, is_online",
+                (phone, name, ip_address)
             )
             user = cur.fetchone()
             user_id, db_phone, db_name, avatar, bio, is_online = user

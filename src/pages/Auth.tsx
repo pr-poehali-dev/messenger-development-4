@@ -38,6 +38,17 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
     setStep('profile');
   };
 
+  const getClientIP = async (): Promise<string> => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip || 'unknown';
+    } catch (err) {
+      console.error('Failed to get IP:', err);
+      return 'unknown';
+    }
+  };
+
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -50,9 +61,11 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
     setError('');
     
     try {
+      const ipAddress = await getClientIP();
+      
       const response = await apiRequest(API_ENDPOINTS.auth, {
         method: 'POST',
-        body: JSON.stringify({ phone, name }),
+        body: JSON.stringify({ phone, name, ipAddress }),
       });
       
       onAuthComplete(phone, name, response.id);
