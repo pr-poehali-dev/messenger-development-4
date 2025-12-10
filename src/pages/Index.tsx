@@ -156,9 +156,18 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
   }, [selectedChat, newChatContact, loadMessages]);
 
   const handleSendMessage = async () => {
-    console.log('handleSendMessage START', { messageInput, trimmed: messageInput.trim(), userId });
+    const inputText = messageInput.trim();
+    console.log('=== handleSendMessage START ===', { 
+      messageInput, 
+      inputText,
+      length: inputText.length,
+      userId,
+      selectedChat,
+      newChatContact,
+      currentChatId
+    });
     
-    if (!messageInput.trim()) {
+    if (!inputText) {
       console.log('Message input is empty, returning');
       toast({
         title: "Ошибка",
@@ -927,19 +936,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
                 className="rounded-xl h-10 w-10" 
                 size="icon"
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('Send button clicked!', { selectedChat, newChatContact, messageInput });
-                  
-                  toast({
-                    title: "Кнопка нажата!",
-                    description: `Текст: "${messageInput}"`,
-                    duration: 3000,
-                  });
-                  
-                  handleSendMessage();
-                }}
+                onClick={handleSendMessage}
               >
                 <Icon name="Send" size={18} />
               </Button>
