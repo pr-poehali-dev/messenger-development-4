@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
+import { API_ENDPOINTS, apiRequest } from '@/config/api';
 
 type AuthProps = {
-  onAuthComplete: (phone: string, name: string) => void;
+  onAuthComplete: (phone: string, name: string, userId: number) => void;
 };
 
 const Auth = ({ onAuthComplete }: AuthProps) => {
@@ -12,6 +13,7 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, '');
@@ -36,7 +38,7 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
     setStep('profile');
   };
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
+  const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (name.trim().length < 2) {
@@ -44,7 +46,22 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
       return;
     }
     
-    onAuthComplete(phone, name);
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const response = await apiRequest(API_ENDPOINTS.auth, {
+        method: 'POST',
+        body: JSON.stringify({ phone, name }),
+      });
+      
+      onAuthComplete(phone, name, response.id);
+    } catch (err) {
+      setError('Ошибка подключения к серверу');
+      console.error('Auth error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -109,8 +126,15 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
               </div>
             )}
 
-            <Button type="submit" className="w-full" size="lg">
-              Начать общение
+            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Icon name="Loader2" size={18} className="animate-spin" />
+                  Подключение...
+                </>
+              ) : (
+                'Начать общение'
+              )}
             </Button>
 
             <Button

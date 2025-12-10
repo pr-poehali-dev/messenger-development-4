@@ -16,6 +16,7 @@ const App = () => {
   const [userPhone, setUserPhone] = useState('');
   const [userAvatar, setUserAvatar] = useState<string | undefined>(undefined);
   const [currentAccountPhone, setCurrentAccountPhone] = useState<string>('');
+  const [userId, setUserId] = useState<string>('');
 
   useEffect(() => {
     const activePhone = localStorage.getItem('whatsok_active_account');
@@ -31,20 +32,21 @@ const App = () => {
         setUserPhone(activeAccount.phone);
         setUserAvatar(activeAccount.avatar);
         setCurrentAccountPhone(activeAccount.phone);
+        setUserId(activeAccount.userId || '');
       }
     }
   }, []);
 
-  const handleAuthComplete = (phone: string, name: string) => {
+  const handleAuthComplete = (phone: string, name: string, userIdFromApi: number) => {
     const storedAccounts = localStorage.getItem('whatsok_accounts');
     const accounts = storedAccounts ? JSON.parse(storedAccounts) : [];
     
     const existingAccountIndex = accounts.findIndex((acc: any) => acc.phone === phone);
     
     if (existingAccountIndex !== -1) {
-      accounts[existingAccountIndex] = { phone, name, avatar: accounts[existingAccountIndex].avatar };
+      accounts[existingAccountIndex] = { phone, name, avatar: accounts[existingAccountIndex].avatar, userId: userIdFromApi.toString() };
     } else {
-      accounts.push({ phone, name });
+      accounts.push({ phone, name, userId: userIdFromApi.toString() });
     }
     
     localStorage.setItem('whatsok_accounts', JSON.stringify(accounts));
@@ -54,6 +56,7 @@ const App = () => {
     setUserName(name);
     setUserPhone(phone);
     setCurrentAccountPhone(phone);
+    setUserId(userIdFromApi.toString());
   };
 
   const handleUpdateProfile = (name: string, avatar?: string) => {

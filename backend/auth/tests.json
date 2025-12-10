@@ -1,0 +1,20 @@
+{
+  "tests": [
+    {
+      "name": "Register new user",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "phone": "+7 (999) 123-45-67",
+        "name": "Тестовый Пользователь"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "id": "number",
+        "phone": "string",
+        "name": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
