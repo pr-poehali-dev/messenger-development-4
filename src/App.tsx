@@ -27,12 +27,19 @@ const App = () => {
       const activeAccount = accounts.find((acc: any) => acc.phone === activePhone);
       
       if (activeAccount) {
+        if (!activeAccount.userId) {
+          console.warn('Старый аккаунт без userId - требуется повторная авторизация');
+          localStorage.removeItem('whatsok_accounts');
+          localStorage.removeItem('whatsok_active_account');
+          return;
+        }
+        
         setIsAuthenticated(true);
         setUserName(activeAccount.name);
         setUserPhone(activeAccount.phone);
         setUserAvatar(activeAccount.avatar);
         setCurrentAccountPhone(activeAccount.phone);
-        setUserId(activeAccount.userId || '');
+        setUserId(activeAccount.userId);
       }
     }
     
