@@ -17,7 +17,7 @@ export const QRCode = ({ userId, userName, onClose }: QRCodeProps) => {
   }, [userId]);
 
   const generateQRCode = async () => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !userId) return;
 
     try {
       await QRCodeLib.toCanvas(canvasRef.current, userId, {
@@ -91,23 +91,33 @@ export const QRCode = ({ userId, userName, onClose }: QRCodeProps) => {
         </div>
 
         <div className="bg-white rounded-2xl p-6 mb-6">
-          <canvas
-            ref={canvasRef}
-            width={256}
-            height={256}
-            className="w-full h-auto"
-          />
+          {userId ? (
+            <canvas
+              ref={canvasRef}
+              width={256}
+              height={256}
+              className="w-full h-auto"
+            />
+          ) : (
+            <div className="w-64 h-64 flex items-center justify-center">
+              <div className="text-center">
+                <Icon name="AlertCircle" size={48} className="text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">ID пользователя не найден</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="text-center mb-6">
           <p className="font-semibold text-lg mb-1">{userName}</p>
-          <p className="text-sm text-muted-foreground">ID: {userId}</p>
+          <p className="text-sm text-muted-foreground">ID: {userId || 'Не задан'}</p>
         </div>
 
         <div className="space-y-2">
           <Button
             onClick={handleShare}
             className="w-full"
+            disabled={!userId}
           >
             <Icon name="Share2" size={18} />
             Поделиться QR-кодом
@@ -116,6 +126,7 @@ export const QRCode = ({ userId, userName, onClose }: QRCodeProps) => {
             onClick={handleDownload}
             variant="outline"
             className="w-full"
+            disabled={!userId}
           >
             <Icon name="Download" size={18} />
             Сохранить изображение

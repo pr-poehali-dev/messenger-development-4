@@ -85,6 +85,7 @@ const App = () => {
         setUserPhone(account.phone);
         setUserAvatar(account.avatar);
         setCurrentAccountPhone(account.phone);
+        setUserId(account.userId || '');
       }
     }
   };
