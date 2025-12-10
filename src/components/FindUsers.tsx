@@ -31,6 +31,7 @@ export const FindUsers = ({ onAddContact, onClose, currentUserId = '1', currentU
   const [addedUsers, setAddedUsers] = useState<Set<number>>(new Set());
   const [showScanner, setShowScanner] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
+  const [showInviteLink, setShowInviteLink] = useState(false);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -76,6 +77,18 @@ export const FindUsers = ({ onAddContact, onClose, currentUserId = '1', currentU
       handleAddUser(userId);
     }
     setShowScanner(false);
+  };
+
+  const handleCopyInviteLink = async () => {
+    const inviteUrl = `${window.location.origin}/?invite=${currentUserId}`;
+    
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setShowInviteLink(true);
+      setTimeout(() => setShowInviteLink(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   if (showScanner) {
@@ -148,6 +161,22 @@ export const FindUsers = ({ onAddContact, onClose, currentUserId = '1', currentU
                 <Icon name="QrCode" size={18} />
                 Мой QR-код
               </Button>
+            </div>
+            
+            <div className="relative">
+              <Button
+                onClick={handleCopyInviteLink}
+                variant="default"
+                className="w-full"
+              >
+                <Icon name="Link" size={18} />
+                Пригласить в мессенджер
+              </Button>
+              {showInviteLink && (
+                <div className="absolute top-full left-0 right-0 mt-2 p-2 bg-primary text-primary-foreground text-sm rounded-lg text-center animate-fade-in">
+                  ✓ Ссылка скопирована
+                </div>
+              )}
             </div>
           </div>
         </div>

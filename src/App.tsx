@@ -35,7 +35,14 @@ const App = () => {
         setUserId(activeAccount.userId || '');
       }
     }
-  }, []);
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteUserId = urlParams.get('invite');
+    if (inviteUserId && isAuthenticated && userId) {
+      handleAutoAddContact(inviteUserId);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [isAuthenticated, userId]);
 
   const handleAuthComplete = (phone: string, name: string, userIdFromApi: number) => {
     const storedAccounts = localStorage.getItem('whatsok_accounts');
@@ -95,6 +102,29 @@ const App = () => {
     setUserName('');
     setUserPhone('');
     setUserAvatar(undefined);
+  };
+
+  const handleAutoAddContact = async (inviteUserId: string) => {
+    const inviteId = parseInt(inviteUserId);
+    if (isNaN(inviteId) || inviteId.toString() === userId) return;
+    
+    try {
+      const API_BASE = 'https://functions.poehali.dev';
+      const response = await fetch(`${API_BASE}/2a2ea21d-6862-4e30-ad09-22a0ee3e6b5a`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': userId
+        },
+        body: JSON.stringify({ contactId: inviteId })
+      });
+      
+      if (response.ok) {
+        console.log('Contact auto-added via invite link');
+      }
+    } catch (err) {
+      console.error('Failed to auto-add contact:', err);
+    }
   };
 
   const handleLogout = () => {
