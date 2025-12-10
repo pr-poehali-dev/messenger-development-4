@@ -59,9 +59,11 @@ type IndexProps = {
   userPhone: string;
   onUpdateProfile: (name: string, avatar?: string) => void;
   onLogout: () => void;
+  onSwitchAccount?: (phone: string) => void;
+  onAddAccount?: () => void;
 };
 
-const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLogout }: IndexProps) => {
+const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLogout, onSwitchAccount, onAddAccount }: IndexProps) => {
   const [activeSection, setActiveSection] = useState<'chats' | 'contacts' | 'archive' | 'profile' | 'settings'>('chats');
   const [selectedChat, setSelectedChat] = useState<number | null>(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -239,6 +241,8 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
             setShowFindUsers(false);
           }}
           onClose={() => setShowFindUsers(false)}
+          currentUserId={userPhone}
+          currentUserName={userName}
         />
       )}
       {isVideoCall && currentChat && (

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { QRScanner } from '@/components/QRScanner';
+import { QRCode } from '@/components/QRCode';
 
 type User = {
   id: number;
@@ -17,13 +19,17 @@ type User = {
 type FindUsersProps = {
   onAddContact: (userId: number) => void;
   onClose: () => void;
+  currentUserId?: string;
+  currentUserName?: string;
 };
 
-export const FindUsers = ({ onAddContact, onClose }: FindUsersProps) => {
+export const FindUsers = ({ onAddContact, onClose, currentUserId = '1', currentUserName = 'Вы' }: FindUsersProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [addedUsers, setAddedUsers] = useState<Set<number>>(new Set());
+  const [showScanner, setShowScanner] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
 
   const mockUsers: User[] = [
     { id: 101, name: 'Алексей Иванов', phone: '+7 (999) 123-45-67', bio: 'Разработчик из Москвы', isOnline: true },
@@ -61,6 +67,22 @@ export const FindUsers = ({ onAddContact, onClose }: FindUsersProps) => {
     setAddedUsers(new Set(addedUsers).add(userId));
   };
 
+  const handleQRScan = (scannedUserId: string) => {
+    const userId = parseInt(scannedUserId);
+    if (!isNaN(userId)) {
+      handleAddUser(userId);
+    }
+    setShowScanner(false);
+  };
+
+  if (showScanner) {
+    return <QRScanner onScan={handleQRScan} onClose={() => setShowScanner(false)} />;
+  }
+
+  if (showQRCode) {
+    return <QRCode userId={currentUserId} userName={currentUserName} onClose={() => setShowQRCode(false)} />;
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={onClose}>
       <div 
@@ -84,25 +106,46 @@ export const FindUsers = ({ onAddContact, onClose }: FindUsersProps) => {
             </Button>
           </div>
 
-          <div className="flex space-x-2">
-            <div className="relative flex-1">
-              <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Имя, телефон или интересы..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-10"
-              />
+          <div className="space-y-3">
+            <div className="flex space-x-2">
+              <div className="relative flex-1">
+                <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Имя, телефон или интересы..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  className="pl-10"
+                />
+              </div>
+              <Button onClick={handleSearch} disabled={isSearching}>
+                {isSearching ? (
+                  <Icon name="Loader2" size={18} className="animate-spin" />
+                ) : (
+                  <Icon name="Search" size={18} />
+                )}
+                Найти
+              </Button>
             </div>
-            <Button onClick={handleSearch} disabled={isSearching}>
-              {isSearching ? (
-                <Icon name="Loader2" size={18} className="animate-spin" />
-              ) : (
-                <Icon name="Search" size={18} />
-              )}
-              Найти
-            </Button>
+            
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => setShowScanner(true)}
+                variant="outline"
+                className="flex-1"
+              >
+                <Icon name="QrCode" size={18} />
+                Сканировать QR
+              </Button>
+              <Button
+                onClick={() => setShowQRCode(true)}
+                variant="outline"
+                className="flex-1"
+              >
+                <Icon name="QrCode" size={18} />
+                Мой QR-код
+              </Button>
+            </div>
           </div>
         </div>
 

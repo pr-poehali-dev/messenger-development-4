@@ -107,3 +107,21 @@
       sans-serif;
   }
 }
+
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  50% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+@layer utilities {
+  .animate-scan {
+    animation: scan 2s ease-in-out infinite;
+  }
+}
