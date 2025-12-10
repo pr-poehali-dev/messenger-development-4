@@ -89,22 +89,9 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
   const [currentChatId, setCurrentChatId] = useState<number | null>(null);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
-  const chats: Chat[] = [
-    { id: 1, name: 'Анна Смирнова', avatar: '', lastMessage: 'Отлично, встретимся завтра!', time: '14:32', unread: 2, online: true },
-    { id: 2, name: 'Дмитрий Петров', avatar: '', lastMessage: 'Голосовое сообщение', time: '13:15', unread: 0, online: false },
-    { id: 3, name: 'Команда проекта', avatar: '', lastMessage: 'Марина: Документы готовы', time: '12:48', unread: 5, online: true, isGroup: true, membersCount: 12 },
-    { id: 4, name: 'Елена Козлова', avatar: '', lastMessage: 'Спасибо за помощь!', time: '11:20', unread: 0, online: false },
-    { id: 5, name: 'Игорь Новиков', avatar: '', lastMessage: 'Созвон в 15:00', time: '10:05', unread: 1, online: true },
-    { id: 6, name: 'Разработка сайта', avatar: '', lastMessage: 'Посмотри эти файлы', time: 'Вчера', unread: 0, online: false, isGroup: true, membersCount: 8 },
-    { id: 7, name: 'Семейный чат', avatar: '', lastMessage: 'Мама: Ужин готов!', time: 'Вчера', unread: 3, online: true, isGroup: true, membersCount: 5 },
-  ];
+  const chats: Chat[] = [];
 
-  const stories: Story[] = [
-    { id: 1, userId: 1, userName: 'Анна', avatar: '', hasViewed: false },
-    { id: 2, userId: 2, userName: 'Дмитрий', avatar: '', hasViewed: true },
-    { id: 3, userId: 5, userName: 'Игорь', avatar: '', hasViewed: false },
-    { id: 4, userId: 4, userName: 'Елена', avatar: '', hasViewed: true },
-  ];
+  const stories: Story[] = [];
 
   const loadMessages = useCallback(async () => {
     if (!selectedChat && !newChatContact) return;
@@ -454,7 +441,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
       </div>
 
       <div className="w-96 border-r border-border bg-card flex flex-col">
-        {activeSection === 'chats' && showStories && <Stories stories={stories} onStoryClick={() => {}} />}
+        {activeSection === 'chats' && showStories && stories.length > 0 && <Stories stories={stories} onStoryClick={() => {}} />}
         
         {activeSection === 'contacts' ? (
           <Contacts 
@@ -515,42 +502,63 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
 
         <ScrollArea className="flex-1">
           <div className="px-3">
-            {filteredChats.map(chat => (
-              <button
-                key={chat.id}
-                onClick={() => setSelectedChat(chat.id)}
-                className={`w-full p-3 rounded-xl mb-1 flex items-center space-x-3 transition-all duration-200 ${
-                  selectedChat === chat.id
-                    ? 'bg-primary/10'
-                    : 'hover:bg-muted'
-                }`}
-              >
-                <div className="relative">
-                  <Avatar className="w-12 h-12">
-                    <AvatarFallback className="bg-primary/20 text-primary font-medium">
-                      {chat.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  {chat.online && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
-                  )}
+            {filteredChats.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <Icon name="MessageSquare" size={32} className="text-primary" />
                 </div>
-                
-                <div className="flex-1 text-left min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-medium text-sm truncate">{chat.name}</h3>
-                    <span className="text-xs text-muted-foreground">{chat.time}</span>
+                <h3 className="font-medium text-lg mb-2">Нет чатов</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Начните общение, добавив контакты
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setActiveSection('contacts')}
+                  className="rounded-xl"
+                >
+                  <Icon name="Users" size={16} className="mr-2" />
+                  Перейти к контактам
+                </Button>
+              </div>
+            ) : (
+              filteredChats.map(chat => (
+                <button
+                  key={chat.id}
+                  onClick={() => setSelectedChat(chat.id)}
+                  className={`w-full p-3 rounded-xl mb-1 flex items-center space-x-3 transition-all duration-200 ${
+                    selectedChat === chat.id
+                      ? 'bg-primary/10'
+                      : 'hover:bg-muted'
+                  }`}
+                >
+                  <div className="relative">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback className="bg-primary/20 text-primary font-medium">
+                        {chat.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    {chat.online && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
+                    )}
                   </div>
-                  <p className="text-sm text-muted-foreground truncate">{chat.lastMessage}</p>
-                </div>
+                  
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-medium text-sm truncate">{chat.name}</h3>
+                      <span className="text-xs text-muted-foreground">{chat.time}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate">{chat.lastMessage}</p>
+                  </div>
 
-                {chat.unread > 0 && (
-                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-xs text-primary-foreground font-medium">{chat.unread}</span>
-                  </div>
-                )}
-              </button>
-            ))}
+                  {chat.unread > 0 && (
+                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                      <span className="text-xs text-primary-foreground font-medium">{chat.unread}</span>
+                    </div>
+                  )}
+                </button>
+              ))
+            )}
           </div>
         </ScrollArea>
           </>

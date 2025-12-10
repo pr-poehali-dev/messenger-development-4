@@ -76,6 +76,17 @@ def get_messages(conn, event: Dict[str, Any], user_id: str) -> Dict[str, Any]:
     
     # Если передан contactId, найти или создать чат
     if contact_id:
+        # Проверить, что contact_id существует в users
+        cur.execute("SELECT id FROM users WHERE id = %s", (contact_id,))
+        if not cur.fetchone():
+            cur.close()
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': f'User with id {contact_id} not found'}),
+                'isBase64Encoded': False
+            }
+        
         # Проверяем, есть ли уже чат между этими пользователями
         cur.execute("""
             SELECT c.id FROM chats c
@@ -168,6 +179,17 @@ def send_message(conn, event: Dict[str, Any], user_id: str) -> Dict[str, Any]:
     
     # Если передан contactId, найти или создать чат
     if contact_id:
+        # Проверить, что contact_id существует в users
+        cur.execute("SELECT id FROM users WHERE id = %s", (contact_id,))
+        if not cur.fetchone():
+            cur.close()
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': f'User with id {contact_id} not found'}),
+                'isBase64Encoded': False
+            }
+        
         cur.execute("""
             SELECT c.id FROM chats c
             JOIN chat_members cm1 ON c.id = cm1.chat_id
