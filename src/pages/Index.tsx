@@ -12,6 +12,7 @@ import { MessageActions } from '@/components/MessageActions';
 import { EmojiPicker } from '@/components/EmojiPicker';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Contacts } from '@/components/Contacts';
+import { Settings } from '@/components/Settings';
 
 type Chat = {
   id: number;
@@ -52,9 +53,13 @@ type Story = {
 
 type IndexProps = {
   userName?: string;
+  userAvatar?: string;
+  userPhone: string;
+  onUpdateProfile: (name: string, avatar?: string) => void;
+  onLogout: () => void;
 };
 
-const Index = ({ userName = 'Вы' }: IndexProps) => {
+const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLogout }: IndexProps) => {
   const [activeSection, setActiveSection] = useState<'chats' | 'contacts' | 'archive' | 'profile' | 'settings'>('chats');
   const [selectedChat, setSelectedChat] = useState<number | null>(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -259,11 +264,18 @@ const Index = ({ userName = 'Вы' }: IndexProps) => {
           ))}
         </nav>
 
-        <button className="w-12 h-12 rounded-full overflow-hidden border-2 border-sidebar-border hover:border-primary transition-colors">
+        <button 
+          className="w-12 h-12 rounded-full overflow-hidden border-2 border-sidebar-border hover:border-primary transition-colors"
+          onClick={() => setActiveSection('settings')}
+        >
           <Avatar>
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-            </AvatarFallback>
+            {userAvatar ? (
+              <AvatarImage src={userAvatar} alt={userName} />
+            ) : (
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            )}
           </Avatar>
         </button>
       </div>
@@ -276,6 +288,14 @@ const Index = ({ userName = 'Вы' }: IndexProps) => {
             setSelectedChat(contactId);
             setActiveSection('chats');
           }} />
+        ) : activeSection === 'settings' ? (
+          <Settings 
+            userName={userName} 
+            userPhone={userPhone} 
+            userAvatar={userAvatar}
+            onUpdateProfile={onUpdateProfile}
+            onLogout={onLogout}
+          />
         ) : (
           <>
             <div className="p-6 space-y-4">
@@ -346,7 +366,7 @@ const Index = ({ userName = 'Вы' }: IndexProps) => {
         )}
       </div>
 
-      {selectedChat ? (
+      {activeSection === 'settings' ? null : selectedChat ? (
         <div className="flex-1 flex flex-col">
           <div className="h-20 border-b border-border px-6 flex items-center justify-between bg-card">
             <div className="flex items-center space-x-4">
