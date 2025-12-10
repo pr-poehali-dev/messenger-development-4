@@ -59,13 +59,14 @@ type IndexProps = {
   userName?: string;
   userAvatar?: string;
   userPhone: string;
+  userId: string;
   onUpdateProfile: (name: string, avatar?: string) => void;
   onLogout: () => void;
   onSwitchAccount?: (phone: string) => void;
   onAddAccount?: () => void;
 };
 
-const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLogout, onSwitchAccount, onAddAccount }: IndexProps) => {
+const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfile, onLogout, onSwitchAccount, onAddAccount }: IndexProps) => {
   const [activeSection, setActiveSection] = useState<'chats' | 'contacts' | 'archive' | 'profile' | 'settings'>('chats');
   const [selectedChat, setSelectedChat] = useState<number | null>(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -241,12 +242,12 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
         <FindUsers 
           onAddContact={async (contactUserId) => {
             try {
-              console.log('Adding contact:', contactUserId, 'for user:', userPhone);
+              console.log('Adding contact:', contactUserId, 'for user:', userId);
               
               await apiRequest(API_ENDPOINTS.contacts, {
                 method: 'POST',
                 body: JSON.stringify({ contactId: contactUserId })
-              }, userPhone);
+              }, userId);
               
               console.log('Contact added successfully');
               
@@ -270,7 +271,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
             }
           }}
           onClose={() => setShowFindUsers(false)}
-          currentUserId={userPhone}
+          currentUserId={userId}
           currentUserName={userName}
         />
       )}
@@ -332,6 +333,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
         {activeSection === 'contacts' ? (
           <Contacts 
             userPhone={userPhone}
+            userId={userId}
             refreshTrigger={contactsRefreshTrigger}
             onChatStart={(contactId) => {
               setSelectedChat(contactId);

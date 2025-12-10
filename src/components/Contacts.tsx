@@ -18,10 +18,11 @@ type Contact = {
 type ContactsProps = {
   onChatStart: (contactId: number) => void;
   userPhone: string;
+  userId: string;
   refreshTrigger?: number;
 };
 
-export const Contacts = ({ onChatStart, userPhone, refreshTrigger }: ContactsProps) => {
+export const Contacts = ({ onChatStart, userPhone, userId, refreshTrigger }: ContactsProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +36,7 @@ export const Contacts = ({ onChatStart, userPhone, refreshTrigger }: ContactsPro
       setIsLoading(true);
       const data = await apiRequest(API_ENDPOINTS.contacts, {
         method: 'GET'
-      }, userPhone);
+      }, userId);
       
       const formattedContacts: Contact[] = (data.contacts || []).map((contact: any) => ({
         id: contact.id,

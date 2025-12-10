@@ -136,7 +136,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index userName={userName} userAvatar={userAvatar} userPhone={userPhone} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} onSwitchAccount={handleSwitchAccount} onAddAccount={handleAddAccount} />} />
+            <Route path="/" element={<Index userName={userName} userAvatar={userAvatar} userPhone={userPhone} userId={userId} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} onSwitchAccount={handleSwitchAccount} onAddAccount={handleAddAccount} />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
