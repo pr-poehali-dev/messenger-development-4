@@ -63,16 +63,23 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
     try {
       const ipAddress = await getClientIP();
       
+      console.log('Sending auth request:', { phone, name, ipAddress });
+      
       const response = await apiRequest(API_ENDPOINTS.auth, {
         method: 'POST',
         body: JSON.stringify({ phone, name, ipAddress }),
       });
       
+      console.log('Auth response:', response);
+      
+      if (!response.id) {
+        throw new Error('Server did not return user ID');
+      }
+      
       onAuthComplete(phone, name, response.id);
-    } catch (err) {
-      setError('Ошибка подключения к серверу');
+    } catch (err: any) {
       console.error('Auth error:', err);
-    } finally {
+      setError(err?.message || 'Ошибка подключения к серверу');
       setIsLoading(false);
     }
   };
