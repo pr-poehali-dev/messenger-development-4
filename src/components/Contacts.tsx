@@ -44,10 +44,19 @@ export const Contacts = ({ onChatStart, onNewChat, userPhone, userId, refreshTri
 
   const loadPhoneContacts = async () => {
     try {
+      console.log('Requesting phone contacts access...');
+      
+      if (!('contacts' in navigator) || !('ContactsManager' in window)) {
+        alert('Ваш браузер не поддерживает доступ к контактам.\n\nИспользуйте Chrome на Android или Safari на iOS.');
+        return;
+      }
+      
       const props = ['name', 'tel'];
       const opts = { multiple: true };
       
       const contactsFromPhone = await (navigator as any).contacts.select(props, opts);
+      
+      console.log('Selected contacts:', contactsFromPhone.length);
       
       const formatted: Contact[] = contactsFromPhone.map((contact: any, index: number) => ({
         id: -1 - index,
@@ -59,8 +68,15 @@ export const Contacts = ({ onChatStart, onNewChat, userPhone, userId, refreshTri
       }));
       
       setPhoneContacts(formatted);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load phone contacts:', err);
+      if (err.name === 'NotSupportedError') {
+        alert('Доступ к контактам не поддерживается на этом устройстве');
+      } else if (err.name === 'NotAllowedError') {
+        console.log('User cancelled contact picker');
+      } else {
+        alert('Не удалось загрузить контакты: ' + err.message);
+      }
     }
   };
 
