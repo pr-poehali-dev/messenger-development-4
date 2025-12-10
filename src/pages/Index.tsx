@@ -622,7 +622,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
           </div>
 
           <ScrollArea className="flex-1 px-6 py-6">
-            {newChatContact && (
+            {newChatContact && messages.length === 0 && !isLoadingMessages && (
               <div className="text-center py-8 mb-4">
                 <div className="w-24 h-24 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
                   <Icon name="MessageCircle" size={40} className="text-primary" />
@@ -641,7 +641,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
                 <div className="flex items-center justify-center py-12">
                   <Icon name="Loader2" size={32} className="animate-spin text-muted-foreground" />
                 </div>
-              ) : !newChatContact && messages.map((message, index) => (
+              ) : messages.map((message, index) => (
                 <div
                   key={message.id}
                   className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'} animate-fade-in group`}
