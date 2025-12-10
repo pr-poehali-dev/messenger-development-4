@@ -84,6 +84,7 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
   const [showStories, setShowStories] = useState(true);
   const [showFindUsers, setShowFindUsers] = useState(false);
   const [contactsRefreshTrigger, setContactsRefreshTrigger] = useState(0);
+  const [newChatContact, setNewChatContact] = useState<{ name: string; phone: string } | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: 'Привет! Как дела?', time: '14:20', isOwn: false },
     { id: 2, text: 'Отлично! Работаю над проектом', time: '14:25', isOwn: true },
@@ -338,7 +339,12 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
             onChatStart={(contactId) => {
               setSelectedChat(contactId);
               setActiveSection('chats');
-            }} 
+            }}
+            onNewChat={(name, phone) => {
+              setNewChatContact({ name, phone });
+              setSelectedChat(null);
+              setActiveSection('chats');
+            }}
           />
         ) : activeSection === 'settings' ? (
           <Settings 
@@ -423,48 +429,56 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
         )}
       </div>
 
-      {activeSection === 'settings' ? null : selectedChat ? (
+      {activeSection === 'settings' ? null : selectedChat || newChatContact ? (
         <div className="flex-1 flex flex-col">
           <div className="h-20 border-b border-border px-6 flex items-center justify-between bg-card">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Avatar className="w-11 h-11">
                   <AvatarFallback className="bg-primary/20 text-primary font-medium">
-                    {currentChat?.isGroup ? <Icon name="Users" size={20} /> : currentChat?.name.split(' ').map(n => n[0]).join('')}
+                    {newChatContact 
+                      ? newChatContact.name.split(' ').map(n => n[0]).join('')
+                      : currentChat?.isGroup ? <Icon name="Users" size={20} /> : currentChat?.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
-                {!currentChat?.isGroup && currentChat?.online && (
+                {!newChatContact && !currentChat?.isGroup && currentChat?.online && (
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
                 )}
               </div>
               <div>
-                <h2 className="font-semibold">{currentChat?.name}</h2>
+                <h2 className="font-semibold">{newChatContact ? newChatContact.name : currentChat?.name}</h2>
                 <p className="text-sm text-muted-foreground">
-                  {currentChat?.isGroup 
-                    ? `${currentChat.membersCount} участников` 
-                    : currentChat?.online ? 'В сети' : 'Был(а) недавно'
+                  {newChatContact 
+                    ? newChatContact.phone
+                    : currentChat?.isGroup 
+                      ? `${currentChat.membersCount} участников` 
+                      : currentChat?.online ? 'В сети' : 'Был(а) недавно'
                   }
                 </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-xl hover:bg-primary/10 hover:text-primary"
-                onClick={() => setIsVoiceCall(true)}
-              >
-                <Icon name="Phone" size={20} />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-xl hover:bg-primary/10 hover:text-primary"
-                onClick={() => setIsVideoCall(true)}
-              >
-                <Icon name="Video" size={20} />
-              </Button>
+              {!newChatContact && (
+                <>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-xl hover:bg-primary/10 hover:text-primary"
+                    onClick={() => setIsVoiceCall(true)}
+                  >
+                    <Icon name="Phone" size={20} />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-xl hover:bg-primary/10 hover:text-primary"
+                    onClick={() => setIsVideoCall(true)}
+                  >
+                    <Icon name="Video" size={20} />
+                  </Button>
+                </>
+              )}
               <Button variant="ghost" size="icon" className="rounded-xl">
                 <Icon name="MoreVertical" size={20} />
               </Button>
@@ -472,8 +486,22 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
           </div>
 
           <ScrollArea className="flex-1 px-6 py-6">
+            {newChatContact && (
+              <div className="text-center py-8 mb-4">
+                <div className="w-24 h-24 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Icon name="MessageCircle" size={40} className="text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Новый чат с {newChatContact.name}</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {newChatContact.phone}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Напишите первое сообщение, чтобы начать общение
+                </p>
+              </div>
+            )}
             <div className="space-y-4 max-w-3xl mx-auto">
-              {messages.map((message, index) => (
+              {!newChatContact && messages.map((message, index) => (
                 <div
                   key={message.id}
                   className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'} animate-fade-in group`}

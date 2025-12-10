@@ -18,12 +18,13 @@ type Contact = {
 
 type ContactsProps = {
   onChatStart: (contactId: number) => void;
+  onNewChat?: (name: string, phone: string) => void;
   userPhone: string;
   userId: string;
   refreshTrigger?: number;
 };
 
-export const Contacts = ({ onChatStart, userPhone, userId, refreshTrigger }: ContactsProps) => {
+export const Contacts = ({ onChatStart, onNewChat, userPhone, userId, refreshTrigger }: ContactsProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [phoneContacts, setPhoneContacts] = useState<Contact[]>([]);
@@ -202,6 +203,7 @@ export const Contacts = ({ onChatStart, userPhone, userId, refreshTrigger }: Con
                     <PhoneContactItem
                       key={contact.id}
                       contact={contact}
+                      onNewChat={onNewChat}
                     />
                   ))}
                 </>
@@ -265,7 +267,13 @@ const ContactItem = ({ contact, onChatStart }: { contact: Contact; onChatStart: 
   );
 };
 
-const PhoneContactItem = ({ contact }: { contact: Contact }) => {
+const PhoneContactItem = ({ contact, onNewChat }: { contact: Contact; onNewChat?: (name: string, phone: string) => void }) => {
+  const handleMessage = () => {
+    if (onNewChat) {
+      onNewChat(contact.name, contact.phone);
+    }
+  };
+
   return (
     <div className="w-full p-3 rounded-xl mb-1 flex items-center justify-between hover:bg-muted/50 transition-colors group">
       <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -286,8 +294,17 @@ const PhoneContactItem = ({ contact }: { contact: Contact }) => {
           variant="ghost"
           size="icon"
           className="rounded-xl h-9 w-9"
+          onClick={handleMessage}
         >
           <Icon name="MessageCircle" size={18} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-xl h-9 w-9"
+          title="Пригласить в мессенджер"
+        >
+          <Icon name="UserPlus" size={18} />
         </Button>
       </div>
     </div>
