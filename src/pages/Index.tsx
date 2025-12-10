@@ -172,6 +172,12 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
     if (!messageInput.trim()) return;
     if (!userId) {
       console.warn('Cannot send message: userId is empty');
+      toast({
+        title: "Ошибка авторизации",
+        description: "Пожалуйста, выйдите и войдите заново",
+        variant: "destructive",
+        duration: 4000,
+      });
       return;
     }
     
