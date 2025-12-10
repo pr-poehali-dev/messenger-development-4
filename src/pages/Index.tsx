@@ -108,6 +108,11 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
 
   const loadMessages = useCallback(async () => {
     if (!selectedChat && !newChatContact) return;
+    if (!userId) {
+      console.warn('Cannot load messages: userId is empty');
+      setMessages([]);
+      return;
+    }
     
     setIsLoadingMessages(true);
     try {
@@ -165,6 +170,10 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
 
   const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
+    if (!userId) {
+      console.warn('Cannot send message: userId is empty');
+      return;
+    }
     
     const currentTime = new Date();
     const timeString = `${currentTime.getHours()}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
