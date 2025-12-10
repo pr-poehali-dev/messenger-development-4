@@ -128,7 +128,7 @@ const Index = () => {
     <div className="flex h-screen bg-background">
       <div className="w-20 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-6 space-y-6">
         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-          <Icon name="Send" size={24} className="text-primary-foreground" />
+          <Icon name="MessageCircle" size={24} className="text-primary-foreground" />
         </div>
         
         <Separator className="w-8" />
