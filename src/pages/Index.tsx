@@ -16,6 +16,7 @@ import { Contacts } from '@/components/Contacts';
 import { Settings } from '@/components/Settings';
 import { UpdateNotification } from '@/components/UpdateNotification';
 import { FindUsers } from '@/components/FindUsers';
+import { toast } from '@/hooks/use-toast';
 
 type Chat = {
   id: number;
@@ -247,9 +248,23 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
               }, userPhone);
               
               console.log('Contact added successfully');
+              
+              toast({
+                title: "Контакт добавлен",
+                description: "Пользователь успешно добавлен в ваши контакты",
+                duration: 3000,
+              });
+              
               setShowFindUsers(false);
             } catch (err) {
               console.error('Failed to add contact:', err);
+              
+              toast({
+                title: "Ошибка",
+                description: "Не удалось добавить контакт. Попробуйте снова.",
+                variant: "destructive",
+                duration: 3000,
+              });
             }
           }}
           onClose={() => setShowFindUsers(false)}
