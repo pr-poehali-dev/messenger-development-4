@@ -29,6 +29,19 @@ type Message = {
   isFile?: boolean;
   fileName?: string;
   fileSize?: string;
+  reactions?: { emoji: string; count: number }[];
+  replyTo?: { id: number; text: string; sender: string };
+  isEdited?: boolean;
+  isForwarded?: boolean;
+  forwardedFrom?: string;
+};
+
+type Story = {
+  id: number;
+  userId: number;
+  userName: string;
+  avatar: string;
+  hasViewed: boolean;
 };
 
 const Index = () => {
@@ -39,6 +52,14 @@ const Index = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [isVideoCall, setIsVideoCall] = useState(false);
+  const [isVoiceCall, setIsVoiceCall] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<number | null>(null);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState<number | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [messageSearchQuery, setMessageSearchQuery] = useState('');
+  const [showStories, setShowStories] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: 'Привет! Как дела?', time: '14:20', isOwn: false },
     { id: 2, text: 'Отлично! Работаю над проектом', time: '14:25', isOwn: true },
@@ -55,6 +76,13 @@ const Index = () => {
     { id: 5, name: 'Игорь Новиков', avatar: '', lastMessage: 'Созвон в 15:00', time: '10:05', unread: 1, online: true },
     { id: 6, name: 'Разработка сайта', avatar: '', lastMessage: 'Посмотри эти файлы', time: 'Вчера', unread: 0, online: false, isGroup: true, membersCount: 8 },
     { id: 7, name: 'Семейный чат', avatar: '', lastMessage: 'Мама: Ужин готов!', time: 'Вчера', unread: 3, online: true, isGroup: true, membersCount: 5 },
+  ];
+
+  const stories: Story[] = [
+    { id: 1, userId: 1, userName: 'Анна', avatar: '', hasViewed: false },
+    { id: 2, userId: 2, userName: 'Дмитрий', avatar: '', hasViewed: true },
+    { id: 3, userId: 5, userName: 'Игорь', avatar: '', hasViewed: false },
+    { id: 4, userId: 4, userName: 'Елена', avatar: '', hasViewed: true },
   ];
 
   const handleSendMessage = () => {
