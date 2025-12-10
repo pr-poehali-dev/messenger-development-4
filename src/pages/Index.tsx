@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/icon';
+import { API_ENDPOINTS, apiRequest } from '@/config/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -236,9 +237,20 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, onUpdateProfile, onLo
       <UpdateNotification />
       {showFindUsers && (
         <FindUsers 
-          onAddContact={(userId) => {
-            console.log('Added user:', userId);
-            setShowFindUsers(false);
+          onAddContact={async (contactUserId) => {
+            try {
+              console.log('Adding contact:', contactUserId, 'for user:', userPhone);
+              
+              await apiRequest(API_ENDPOINTS.contacts, {
+                method: 'POST',
+                body: JSON.stringify({ contactId: contactUserId })
+              }, userPhone);
+              
+              console.log('Contact added successfully');
+              setShowFindUsers(false);
+            } catch (err) {
+              console.error('Failed to add contact:', err);
+            }
           }}
           onClose={() => setShowFindUsers(false)}
           currentUserId={userPhone}
