@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import QRCodeLib from 'qrcode';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 
@@ -15,60 +16,22 @@ export const QRCode = ({ userId, userName, onClose }: QRCodeProps) => {
     generateQRCode();
   }, [userId]);
 
-  const generateQRCode = () => {
+  const generateQRCode = async () => {
     if (!canvasRef.current) return;
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const size = 256;
-    const cellSize = size / 25;
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, size, size);
-    
-    ctx.fillStyle = '#000000';
-    
-    const pattern = generatePattern(userId);
-    
-    for (let i = 0; i < 25; i++) {
-      for (let j = 0; j < 25; j++) {
-        if (pattern[i][j]) {
-          ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-        }
-      }
+    try {
+      await QRCodeLib.toCanvas(canvasRef.current, userId, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        },
+        errorCorrectionLevel: 'H'
+      });
+    } catch (err) {
+      console.error('QR Code generation error:', err);
     }
-  };
-
-  const generatePattern = (data: string): boolean[][] => {
-    const size = 25;
-    const pattern: boolean[][] = Array(size).fill(null).map(() => Array(size).fill(false));
-    
-    for (let i = 0; i < 7; i++) {
-      for (let j = 0; j < 7; j++) {
-        if (i === 0 || i === 6 || j === 0 || j === 6 || (i >= 2 && i <= 4 && j >= 2 && j <= 4)) {
-          pattern[i][j] = true;
-          pattern[i][size - 1 - j] = true;
-          pattern[size - 1 - i][j] = true;
-        }
-      }
-    }
-    
-    let hash = 0;
-    for (let i = 0; i < data.length; i++) {
-      hash = ((hash << 5) - hash) + data.charCodeAt(i);
-      hash = hash & hash;
-    }
-    
-    for (let i = 8; i < size - 8; i++) {
-      for (let j = 8; j < size - 8; j++) {
-        hash = (hash * 1103515245 + 12345) & 0x7fffffff;
-        pattern[i][j] = (hash % 2) === 0;
-      }
-    }
-    
-    return pattern;
   };
 
   const handleShare = async () => {

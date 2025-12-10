@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import QrScanner from 'qr-scanner';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 
@@ -10,39 +11,49 @@ type QRScannerProps = {
 export const QRScanner = ({ onScan, onClose }: QRScannerProps) => {
   const [hasCamera, setHasCamera] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
+  const [scannedData, setScannedData] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const qrScannerRef = useRef<QrScanner | null>(null);
 
   useEffect(() => {
-    startCamera();
+    startScanner();
     return () => {
-      stopCamera();
+      stopScanner();
     };
   }, []);
 
-  const startCamera = async () => {
+  const startScanner = async () => {
+    if (!videoRef.current) return;
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-      }
-      
+      const qrScanner = new QrScanner(
+        videoRef.current,
+        (result) => {
+          setScannedData(result.data);
+          onScan(result.data);
+        },
+        {
+          preferredCamera: 'environment',
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+        }
+      );
+
+      qrScannerRef.current = qrScanner;
+      await qrScanner.start();
       setHasCamera(true);
       setIsScanning(true);
     } catch (err) {
-      console.error('Camera access error:', err);
+      console.error('QR Scanner error:', err);
       setHasCamera(false);
     }
   };
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+  const stopScanner = () => {
+    if (qrScannerRef.current) {
+      qrScannerRef.current.stop();
+      qrScannerRef.current.destroy();
+      qrScannerRef.current = null;
     }
   };
 
@@ -111,7 +122,7 @@ export const QRScanner = ({ onScan, onClose }: QRScannerProps) => {
             <p className="text-muted-foreground mb-6">
               Разрешите доступ к камере в настройках браузера
             </p>
-            <Button onClick={startCamera}>
+            <Button onClick={startScanner}>
               <Icon name="Camera" size={18} />
               Попробовать снова
             </Button>
