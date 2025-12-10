@@ -8,9 +8,8 @@ type AuthProps = {
 };
 
 const Auth = ({ onAuthComplete }: AuthProps) => {
-  const [step, setStep] = useState<'phone' | 'code' | 'profile'>('phone');
+  const [step, setStep] = useState<'phone' | 'profile'>('phone');
   const [phone, setPhone] = useState('');
-  const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
 
@@ -30,18 +29,6 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
     
     if (digits.length < 11) {
       setError('Введите корректный номер телефона');
-      return;
-    }
-    
-    setError('');
-    setStep('code');
-  };
-
-  const handleCodeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (code.length !== 6) {
-      setError('Код должен содержать 6 цифр');
       return;
     }
     
@@ -69,8 +56,7 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
           </div>
           <h1 className="text-3xl font-bold mb-2">What's ok</h1>
           <p className="text-muted-foreground">
-            {step === 'phone' && 'Введите номер телефона'}
-            {step === 'code' && 'Введите код подтверждения'}
+            {step === 'phone' && 'Введите номер телефона для входа'}
             {step === 'profile' && 'Заполните профиль'}
           </p>
         </div>
@@ -97,57 +83,8 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
             )}
 
             <Button type="submit" className="w-full" size="lg">
-              Получить код
+              Продолжить
             </Button>
-
-            <p className="text-xs text-muted-foreground text-center">
-              Мы отправим SMS с кодом подтверждения на указанный номер
-            </p>
-          </form>
-        )}
-
-        {step === 'code' && (
-          <form onSubmit={handleCodeSubmit} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Код из SMS</label>
-              <Input
-                type="text"
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="123456"
-                className="text-lg text-center tracking-widest"
-                maxLength={6}
-                autoFocus
-              />
-            </div>
-
-            {error && (
-              <div className="text-sm text-red-500 flex items-center space-x-2">
-                <Icon name="AlertCircle" size={16} />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <Button type="submit" className="w-full" size="lg">
-              Подтвердить
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => {
-                setStep('phone');
-                setCode('');
-                setError('');
-              }}
-            >
-              Изменить номер
-            </Button>
-
-            <p className="text-xs text-muted-foreground text-center">
-              Код отправлен на {phone}
-            </p>
           </form>
         )}
 
@@ -176,8 +113,21 @@ const Auth = ({ onAuthComplete }: AuthProps) => {
               Начать общение
             </Button>
 
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                setStep('phone');
+                setName('');
+                setError('');
+              }}
+            >
+              Изменить номер
+            </Button>
+
             <p className="text-xs text-muted-foreground text-center">
-              Это имя будут видеть ваши контакты
+              Номер: {phone}
             </p>
           </form>
         )}
