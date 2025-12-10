@@ -6,6 +6,11 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { VideoCall } from '@/components/VideoCall';
+import { VoiceCall } from '@/components/VoiceCall';
+import { Stories } from '@/components/Stories';
+import { MessageActions } from '@/components/MessageActions';
+import { EmojiPicker } from '@/components/EmojiPicker';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 type Chat = {
   id: number;
@@ -91,20 +96,74 @@ const Index = () => {
     const currentTime = new Date();
     const timeString = `${currentTime.getHours()}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
     
+    if (editingMessage) {
+      setMessages(messages.map(msg => 
+        msg.id === editingMessage.id 
+          ? { ...msg, text: messageInput, isEdited: true }
+          : msg
+      ));
+      setEditingMessage(null);
+      setMessageInput('');
+      return;
+    }
+    
     const newMessage: Message = {
       id: messages.length + 1,
       text: messageInput,
       time: timeString,
       isOwn: true,
+      replyTo: replyingTo ? { id: replyingTo.id, text: replyingTo.text, sender: replyingTo.isOwn ? 'Вы' : currentChat?.name || '' } : undefined,
     };
     
     setMessages([...messages, newMessage]);
     setMessageInput('');
+    setReplyingTo(null);
     
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
     }, 3000);
+  };
+
+  const handleReaction = (messageId: number, emoji: string) => {
+    setMessages(messages.map(msg => {
+      if (msg.id === messageId) {
+        const existingReaction = msg.reactions?.find(r => r.emoji === emoji);
+        if (existingReaction) {
+          return {
+            ...msg,
+            reactions: msg.reactions?.map(r =>
+              r.emoji === emoji ? { ...r, count: r.count + 1 } : r
+            ),
+          };
+        }
+        return {
+          ...msg,
+          reactions: [...(msg.reactions || []), { emoji, count: 1 }],
+        };
+      }
+      return msg;
+    }));
+    setShowEmojiPicker(null);
+  };
+
+  const handleDeleteMessage = (messageId: number) => {
+    setMessages(messages.filter(msg => msg.id !== messageId));
+    setSelectedMessage(null);
+  };
+
+  const handleForwardMessage = (messageId: number) => {
+    const msg = messages.find(m => m.id === messageId);
+    if (msg) {
+      const newMessage: Message = {
+        ...msg,
+        id: messages.length + 1,
+        isForwarded: true,
+        forwardedFrom: currentChat?.name || 'Unknown',
+      };
+      setMessages([...messages, newMessage]);
+    }
+    setSelectedMessage(null);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -165,6 +224,12 @@ const Index = () => {
           onClose={() => setIsVideoCall(false)} 
         />
       )}
+      {isVoiceCall && currentChat && (
+        <VoiceCall 
+          contactName={currentChat.name} 
+          onClose={() => setIsVoiceCall(false)} 
+        />
+      )}
       <div className="flex h-screen bg-background">
       <div className="w-20 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-6 space-y-6">
         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
@@ -197,12 +262,17 @@ const Index = () => {
       </div>
 
       <div className="w-96 border-r border-border bg-card flex flex-col">
+        {showStories && <Stories stories={stories} onStoryClick={() => {}} />}
+        
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold">Чаты</h1>
-            <Button variant="ghost" size="icon" className="rounded-xl">
-              <Icon name="Plus" size={20} />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <ThemeToggle theme={theme} onToggle={() => setTheme(theme === 'light' ? 'dark' : 'light')} />
+              <Button variant="ghost" size="icon" className="rounded-xl">
+                <Icon name="Plus" size={20} />
+              </Button>
+            </div>
           </div>
           
           <div className="relative">
@@ -284,7 +354,12 @@ const Index = () => {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/10 hover:text-primary">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-xl hover:bg-primary/10 hover:text-primary"
+                onClick={() => setIsVoiceCall(true)}
+              >
                 <Icon name="Phone" size={20} />
               </Button>
               <Button 
@@ -309,7 +384,21 @@ const Index = () => {
                   className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'} animate-fade-in group`}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div className={`max-w-md ${message.isOwn ? 'order-2' : 'order-1'}`}>
+                  <div className={`max-w-md ${message.isOwn ? 'order-2' : 'order-1'} relative`}>
+                    {message.isForwarded && (
+                      <div className="text-xs text-muted-foreground mb-1 flex items-center space-x-1">
+                        <Icon name="Forward" size={12} />
+                        <span>Переслано от {message.forwardedFrom}</span>
+                      </div>
+                    )}
+                    {message.replyTo && (
+                      <div className={`mb-2 px-3 py-2 rounded-lg border-l-2 ${
+                        message.isOwn ? 'border-primary-foreground/50 bg-primary-foreground/10' : 'border-primary bg-primary/10'
+                      }`}>
+                        <div className="text-xs font-medium">{message.replyTo.sender}</div>
+                        <div className="text-xs opacity-70 truncate">{message.replyTo.text}</div>
+                      </div>
+                    )}
                     {message.isFile ? (
                       <div
                         className={`px-4 py-3 rounded-2xl ${
@@ -378,13 +467,59 @@ const Index = () => {
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted'
                         }`}
+                        onClick={() => setSelectedMessage(selectedMessage === message.id ? null : message.id)}
                       >
                         <p className="text-sm">{message.text}</p>
+                        {message.isEdited && (
+                          <span className="text-xs opacity-60 ml-2">(изменено)</span>
+                        )}
                       </div>
                     )}
+                    
+                    {message.reactions && message.reactions.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {message.reactions.map((reaction, idx) => (
+                          <div key={idx} className="bg-card border border-border rounded-full px-2 py-0.5 text-xs flex items-center space-x-1">
+                            <span>{reaction.emoji}</span>
+                            <span className="text-muted-foreground">{reaction.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
                     <p className={`text-xs text-muted-foreground mt-1 ${message.isOwn ? 'text-right' : 'text-left'}`}>
                       {message.time}
                     </p>
+                    
+                    {selectedMessage === message.id && (
+                      <MessageActions
+                        messageId={message.id}
+                        isOwn={message.isOwn}
+                        onReply={() => {
+                          setReplyingTo(message);
+                          setSelectedMessage(null);
+                        }}
+                        onEdit={() => {
+                          setEditingMessage(message);
+                          setMessageInput(message.text);
+                          setSelectedMessage(null);
+                        }}
+                        onForward={() => handleForwardMessage(message.id)}
+                        onDelete={() => handleDeleteMessage(message.id)}
+                        onReact={() => {
+                          setShowEmojiPicker(message.id);
+                          setSelectedMessage(null);
+                        }}
+                        onClose={() => setSelectedMessage(null)}
+                      />
+                    )}
+                    
+                    {showEmojiPicker === message.id && (
+                      <EmojiPicker
+                        onSelect={(emoji) => handleReaction(message.id, emoji)}
+                        onClose={() => setShowEmojiPicker(null)}
+                      />
+                    )}
                   </div>
                 </div>
               ))}
@@ -407,6 +542,31 @@ const Index = () => {
           </ScrollArea>
 
           <div className="border-t border-border p-4 bg-card">
+            {replyingTo && (
+              <div className="max-w-3xl mx-auto mb-2 bg-muted px-4 py-2 rounded-lg flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Icon name="Reply" size={16} className="text-primary" />
+                  <div>
+                    <div className="text-xs font-medium">{replyingTo.isOwn ? 'Вы' : currentChat?.name}</div>
+                    <div className="text-xs text-muted-foreground truncate max-w-xs">{replyingTo.text}</div>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setReplyingTo(null)}>
+                  <Icon name="X" size={14} />
+                </Button>
+              </div>
+            )}
+            {editingMessage && (
+              <div className="max-w-3xl mx-auto mb-2 bg-primary/10 px-4 py-2 rounded-lg flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Icon name="Pencil" size={16} className="text-primary" />
+                  <div className="text-sm">Редактирование сообщения</div>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingMessage(null); setMessageInput(''); }}>
+                  <Icon name="X" size={14} />
+                </Button>
+              </div>
+            )}
             <div className="max-w-3xl mx-auto flex items-end space-x-3 relative">
               <div className="relative">
                 <Button 
