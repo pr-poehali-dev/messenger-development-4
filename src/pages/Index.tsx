@@ -30,6 +30,13 @@ const Index = () => {
   const [selectedChat, setSelectedChat] = useState<number | null>(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([
+    { id: 1, text: 'Привет! Как дела?', time: '14:20', isOwn: false },
+    { id: 2, text: 'Отлично! Работаю над проектом', time: '14:25', isOwn: true },
+    { id: 3, text: '', time: '14:28', isOwn: false, isVoice: true, voiceDuration: '0:45' },
+    { id: 4, text: 'Звучит здорово! Может созвонимся завтра?', time: '14:30', isOwn: true },
+    { id: 5, text: 'Отлично, встретимся завтра!', time: '14:32', isOwn: false },
+  ]);
 
   const chats: Chat[] = [
     { id: 1, name: 'Анна Смирнова', avatar: '', lastMessage: 'Отлично, встретимся завтра!', time: '14:32', unread: 2, online: true },
@@ -40,13 +47,29 @@ const Index = () => {
     { id: 6, name: 'Ольга Иванова', avatar: '', lastMessage: 'Посмотри эти файлы', time: 'Вчера', unread: 0, online: false },
   ];
 
-  const messages: Message[] = [
-    { id: 1, text: 'Привет! Как дела?', time: '14:20', isOwn: false },
-    { id: 2, text: 'Отлично! Работаю над проектом', time: '14:25', isOwn: true },
-    { id: 3, text: '', time: '14:28', isOwn: false, isVoice: true, voiceDuration: '0:45' },
-    { id: 4, text: 'Звучит здорово! Может созвонимся завтра?', time: '14:30', isOwn: true },
-    { id: 5, text: 'Отлично, встретимся завтра!', time: '14:32', isOwn: false },
-  ];
+  const handleSendMessage = () => {
+    if (!messageInput.trim()) return;
+    
+    const currentTime = new Date();
+    const timeString = `${currentTime.getHours()}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
+    
+    const newMessage: Message = {
+      id: messages.length + 1,
+      text: messageInput,
+      time: timeString,
+      isOwn: true,
+    };
+    
+    setMessages([...messages, newMessage]);
+    setMessageInput('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   const currentChat = chats.find(c => c.id === selectedChat);
 
@@ -192,10 +215,11 @@ const Index = () => {
 
           <ScrollArea className="flex-1 px-6 py-6">
             <div className="space-y-4 max-w-3xl mx-auto">
-              {messages.map(message => (
+              {messages.map((message, index) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                  style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className={`max-w-md ${message.isOwn ? 'order-2' : 'order-1'}`}>
                     {message.isVoice ? (
@@ -257,6 +281,7 @@ const Index = () => {
                   placeholder="Написать сообщение..."
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
                   className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
                 />
                 <Button variant="ghost" size="icon" className="rounded-xl hover:bg-background h-8 w-8">
@@ -268,7 +293,7 @@ const Index = () => {
                 <Icon name="Mic" size={22} />
               </Button>
               
-              <Button className="rounded-xl h-10 w-10" size="icon">
+              <Button className="rounded-xl h-10 w-10" size="icon" onClick={handleSendMessage}>
                 <Icon name="Send" size={18} />
               </Button>
             </div>
