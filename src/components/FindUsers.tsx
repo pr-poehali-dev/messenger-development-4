@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { QRScanner } from '@/components/QRScanner';
 import { QRCode } from '@/components/QRCode';
+import { API_ENDPOINTS, apiRequest } from '@/config/api';
 
 type User = {
   id: number;
@@ -31,18 +32,7 @@ export const FindUsers = ({ onAddContact, onClose, currentUserId = '1', currentU
   const [showScanner, setShowScanner] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
 
-  const mockUsers: User[] = [
-    { id: 101, name: 'Алексей Иванов', phone: '+7 (999) 123-45-67', bio: 'Разработчик из Москвы', isOnline: true },
-    { id: 102, name: 'Мария Петрова', phone: '+7 (999) 234-56-78', bio: 'Дизайнер', isOnline: false },
-    { id: 103, name: 'Дмитрий Сидоров', phone: '+7 (999) 345-67-89', bio: 'Предприниматель', isOnline: true },
-    { id: 104, name: 'Елена Козлова', phone: '+7 (999) 456-78-90', bio: 'Маркетолог', isOnline: true },
-    { id: 105, name: 'Сергей Новиков', phone: '+7 (999) 567-89-01', bio: 'Фотограф', isOnline: false },
-    { id: 106, name: 'Анна Волкова', phone: '+7 (999) 678-90-12', bio: 'Журналист', isOnline: true },
-    { id: 107, name: 'Игорь Морозов', phone: '+7 (999) 789-01-23', bio: 'Преподаватель', isOnline: false },
-    { id: 108, name: 'Ольга Соколова', phone: '+7 (999) 890-12-34', bio: 'Врач', isOnline: true },
-  ];
-
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
       return;
@@ -50,16 +40,29 @@ export const FindUsers = ({ onAddContact, onClose, currentUserId = '1', currentU
 
     setIsSearching(true);
     
-    setTimeout(() => {
-      const results = mockUsers.filter(user => 
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.phone.includes(searchQuery) ||
-        user.bio?.toLowerCase().includes(searchQuery.toLowerCase())
+    try {
+      const data = await apiRequest(
+        `${API_ENDPOINTS.users}?query=${encodeURIComponent(searchQuery)}`,
+        { method: 'GET' },
+        currentUserId
       );
       
-      setSearchResults(results);
+      const formattedUsers: User[] = (data.users || []).map((user: any) => ({
+        id: user.id,
+        name: user.name || user.phone,
+        phone: user.phone,
+        avatar: user.avatar,
+        bio: user.bio,
+        isOnline: user.isOnline || false
+      }));
+      
+      setSearchResults(formattedUsers);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setSearchResults([]);
+    } finally {
       setIsSearching(false);
-    }, 500);
+    }
   };
 
   const handleAddUser = (userId: number) => {
