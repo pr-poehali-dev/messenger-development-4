@@ -144,11 +144,6 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
     if (newChatContact) {
       setNewChatContact(null);
     }
-    
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-    }, 3000);
   };
 
   const handleReaction = (messageId: number, emoji: string) => {
