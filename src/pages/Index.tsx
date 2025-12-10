@@ -68,7 +68,7 @@ type IndexProps = {
 
 const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfile, onLogout, onSwitchAccount, onAddAccount }: IndexProps) => {
   const [activeSection, setActiveSection] = useState<'chats' | 'contacts' | 'archive' | 'profile' | 'settings'>('chats');
-  const [selectedChat, setSelectedChat] = useState<number | null>(1);
+  const [selectedChat, setSelectedChat] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
