@@ -168,6 +168,8 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
       return;
     }
     
+    console.log('handleSendMessage called', { selectedChat, newChatContact, currentChatId, messagesCount: messages.length });
+    
     const currentTime = new Date();
     const timeString = `${currentTime.getHours()}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
     
@@ -204,9 +206,12 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
       replyTo: currentReplyTo ? { id: currentReplyTo.id, text: currentReplyTo.text, sender: currentReplyTo.isOwn ? 'Вы' : chatName } : undefined,
     };
     
+    console.log('Adding optimistic message:', optimisticMessage);
     setMessages([...messages, optimisticMessage]);
     setMessageInput('');
     setReplyingTo(null);
+    
+    console.log('Messages after adding optimistic:', messages.length + 1);
     
     try {
       const body: any = { text: messageText };
@@ -228,21 +233,26 @@ const Index = ({ userName = 'Вы', userAvatar, userPhone, userId, onUpdateProfi
         body: JSON.stringify(body)
       }, userId);
       
+      console.log('Message sent successfully, response:', response);
+      
       if (response.chatId && !currentChatId) {
         setCurrentChatId(response.chatId);
       }
       
       if (newChatContact) {
+        console.log('Clearing newChatContact');
         setNewChatContact(null);
       }
       
-      setMessages(prevMessages => 
-        prevMessages.map(msg => 
+      setMessages(prevMessages => {
+        const updated = prevMessages.map(msg => 
           msg.id === tempId 
             ? { ...msg, id: response.id }
             : msg
-        )
-      );
+        );
+        console.log('Updated messages with real ID:', updated.length);
+        return updated;
+      });
     } catch (err) {
       console.error('Failed to send message:', err);
       setMessages(prevMessages => prevMessages.filter(msg => msg.id !== tempId));
